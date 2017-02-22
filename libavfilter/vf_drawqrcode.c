@@ -71,7 +71,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
     char buf[128];
     unsigned char *p, * prev_row;
     unsigned int margin, real_width;
-    
+
     sprintf(buf, "%" PRId64, frame->pts);
     qrcode = QRcode_encodeString(buf, 0, QR_ECLEVEL_H, QR_MODE_8, 0);
     p = qrcode->data;
@@ -135,10 +135,10 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 static const AVOption drawqrcode_options[] = {
     { "x",         "set horizontal position of the left box edge", OFFSET(x),    AV_OPT_TYPE_INT, { .i64=0 },       0, INT_MAX, FLAGS },
     { "y",         "set vertical position of the top box edge",    OFFSET(y),    AV_OPT_TYPE_INT, { .i64 = 0 },   0, INT_MAX, FLAGS },
-    { "thickness", "set the box thickness",                        OFFSET(thickness),    AV_OPT_TYPE_INT, { .i64= 3 },       1, INT_MAX, FLAGS },
-    { "t",         "set the box thickness",                        OFFSET(thickness),    AV_OPT_TYPE_INT, { .i64= 3 },       1, INT_MAX, FLAGS },
-    { "margin",    "top/bottom and left/right margins size",       OFFSET(margin),    AV_OPT_TYPE_INT, { .i64= 5 },       1, INT_MAX, FLAGS },
-    { "m",         "top/bottom and left/right margins size",       OFFSET(margin),    AV_OPT_TYPE_INT, { .i64= 5 },       1, INT_MAX, FLAGS },
+    { "thickness", "set thickness of QR code element",                        OFFSET(thickness),    AV_OPT_TYPE_INT, { .i64= 5 },       1, INT_MAX, FLAGS },
+    { "t",         "set thickness of QR code element",                        OFFSET(thickness),    AV_OPT_TYPE_INT, { .i64= 5 },       1, INT_MAX, FLAGS },
+    { "margin",    "top/bottom and left/right margins size",       OFFSET(margin),    AV_OPT_TYPE_INT, { .i64= 2 },       1, INT_MAX, FLAGS },
+    { "m",         "top/bottom and left/right margins size",       OFFSET(margin),    AV_OPT_TYPE_INT, { .i64= 2 },       1, INT_MAX, FLAGS },
     { NULL }
 };
 
@@ -174,5 +174,4 @@ AVFilter ff_vf_drawqrcode = {
     .outputs       = drawqrcode_outputs,
     .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,
 };
-
 

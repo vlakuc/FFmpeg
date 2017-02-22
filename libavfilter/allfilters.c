@@ -180,6 +180,7 @@ void avfilter_register_all(void)
     REGISTER_FILTER(DISPLACE,       displace,       vf);
     REGISTER_FILTER(DRAWBOX,        drawbox,        vf);
     REGISTER_FILTER(DRAWQRCODE,     drawqrcode,     vf);
+    REGISTER_FILTER(DECODEQRCODE,   decodeqrcode,     vf);
     REGISTER_FILTER(DRAWGRAPH,      drawgraph,      vf);
     REGISTER_FILTER(DRAWGRID,       drawgrid,       vf);
     REGISTER_FILTER(DRAWTEXT,       drawtext,       vf);
