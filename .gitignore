@@ -27,6 +27,7 @@
 /ffplay
 /ffprobe
 /ffserver
+/ffcopy
 /config.*
 /coverage.info
 /avversion.h

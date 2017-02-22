@@ -146,6 +146,16 @@ typedef struct RTPPacket {
     struct RTPPacket *next;
 } RTPPacket;
 
+typedef struct {
+    int inited_streams;
+    int ignore_input_ntp_time;
+    int clock_offset_inited;
+    int64_t time_origin;
+
+    int64_t client_clock_fast_threshold;
+    int64_t client_clock_slow_threshold;
+} RTPCommonStreamParameters;
+
 struct RTPDemuxContext {
     AVFormatContext *ic;
     AVStream *st;
@@ -155,6 +165,7 @@ struct RTPDemuxContext {
     uint32_t timestamp;
     uint32_t base_timestamp;
     uint32_t cur_timestamp;
+    int64_t  time_origin_offset;
     int64_t  unwrapped_timestamp;
     int64_t  range_start_offset;
     int max_payload_size;
@@ -190,6 +201,13 @@ struct RTPDemuxContext {
     /* dynamic payload stuff */
     const RTPDynamicProtocolHandler *handler;
     PayloadContext *dynamic_protocol_context;
+
+    /* Absolute time routines fields. */
+    int64_t current_packet_reception_time;
+    int64_t couted_clock_skew;
+    int time_offset_updated;
+
+    RTPCommonStreamParameters *common_parameters;
 };
 
 void ff_register_dynamic_payload_handler(RTPDynamicProtocolHandler *handler);

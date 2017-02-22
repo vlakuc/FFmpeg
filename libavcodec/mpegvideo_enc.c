@@ -2004,7 +2004,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
                 }
             break;
             default:
-                av_log(s->avctx, AV_LOG_ERROR, "vbv buffer overflow\n");
+                av_log(s->avctx, AV_LOG_DEBUG, "vbv buffer overflow\n");
             }
             flush_put_bits(&s->pb);
             s->frame_bits  = put_bits_count(&s->pb);

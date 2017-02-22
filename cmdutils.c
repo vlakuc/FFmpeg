@@ -65,6 +65,10 @@
 #include <windows.h>
 #endif
 
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+#include "libavutil/internal.h"
+FF_DISABLE_DEPRECATION_WARNINGS
+
 static int init_report(const char *env);
 
 AVDictionary *sws_dict;
@@ -2261,3 +2265,6 @@ int show_sinks(void *optctx, const char *opt, const char *arg)
 }
 
 #endif
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

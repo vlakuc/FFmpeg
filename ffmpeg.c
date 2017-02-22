@@ -23,6 +23,7 @@
  * multimedia converter based on the FFmpeg libraries
  */
 
+#define _BSD_SOURCE
 #include "config.h"
 #include <ctype.h>
 #include <string.h>
@@ -100,11 +101,21 @@
 #endif
 
 #include <time.h>
+#include <syslog.h>
+#include <stdarg.h>
+
+#if CONFIG_SYSINFO
+#include <sysinfo.h>
+#endif
 
 #include "ffmpeg.h"
 #include "cmdutils.h"
 
 #include "libavutil/avassert.h"
+
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_DISABLE_DEPRECATION_WARNINGS
 
 const char program_name[] = "ffmpeg";
 const int program_birth_year = 2000;
@@ -128,6 +139,7 @@ static int run_as_daemon  = 0;
 static int nb_frames_dup = 0;
 static int nb_frames_drop = 0;
 static int64_t decode_error_stat[2];
+static int runtime_error = 0;
 
 static int want_sdp = 1;
 
@@ -155,6 +167,33 @@ int        nb_filtergraphs;
 static struct termios oldtty;
 static int restore_tty;
 #endif
+
+void report_status(const char *status)
+{
+#if CONFIG_SYSINFO
+    static const char s_state[] = "state";
+    static const char s_statetime[] = "statetime";
+    const char *env = getenv("FF_SYSINFO");
+    if(env && *env) {
+        size_t len = strlen(env);
+        char *buf = av_malloc(len+sizeof(s_statetime)+1);
+        strncpy(buf,env,len);
+        buf[len] = '/';
+        strncpy(buf+len+1,s_state,sizeof(s_state));
+        sysinfo_set_string(buf,status);
+        strncpy(buf+len+1,s_statetime,sizeof(s_statetime));
+        sysinfo_set_integer(buf,time(NULL));
+        av_free(buf);
+    }
+#endif
+}
+
+void exit_error(const char *filename, int err, int exitcode)
+{
+    runtime_error = err;
+    print_error(filename, err);
+    exit_program(exitcode);
+}
 
 #if HAVE_PTHREADS
 static void free_input_threads(void);
@@ -211,17 +250,22 @@ static void sub2video_copy_rect(uint8_t *dst, int dst_linesize, int w, int h,
     }
 }
 
-static void sub2video_push_ref(InputStream *ist, int64_t pts)
+static int sub2video_push_ref(InputStream *ist, int64_t pts)
 {
     AVFrame *frame = ist->sub2video.frame;
     int i;
+    int res = 0;
 
     av_assert1(frame->data[0]);
     ist->sub2video.last_pts = frame->pts = pts;
-    for (i = 0; i < ist->nb_filters; i++)
-        av_buffersrc_add_frame_flags(ist->filters[i]->filter, frame,
-                                     AV_BUFFERSRC_FLAG_KEEP_REF |
-                                     AV_BUFFERSRC_FLAG_PUSH);
+    for (i = 0; i < ist->nb_filters; i++) {
+        int r = av_buffersrc_add_frame_flags(ist->filters[i]->filter, frame,
+                                             AV_BUFFERSRC_FLAG_KEEP_REF |
+                                             AV_BUFFERSRC_FLAG_PUSH);
+        if (r < 0)
+            res = r;
+    }
+    return res;
 }
 
 static void sub2video_update(InputStream *ist, AVSubtitle *sub)
@@ -287,14 +331,19 @@ static void sub2video_heartbeat(InputStream *ist, int64_t pts)
     }
 }
 
-static void sub2video_flush(InputStream *ist)
+static int sub2video_flush(InputStream *ist)
 {
     int i;
+    int res;
 
     if (ist->sub2video.end_pts < INT64_MAX)
         sub2video_update(ist, NULL);
-    for (i = 0; i < ist->nb_filters; i++)
-        av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
+    for (i = 0; i < ist->nb_filters; i++) {
+        int r = av_buffersrc_add_frame(ist->filters[i]->filter, NULL);
+        if (r < 0)
+            res = r;
+    }
+    return res;
 }
 
 /* end of sub2video hack */
@@ -317,7 +366,7 @@ static volatile int received_sigterm = 0;
 static volatile int received_nb_signals = 0;
 static volatile int transcode_init_done = 0;
 static volatile int ffmpeg_exited = 0;
-static int main_return_code = 0;
+static int main_return_code = 0; // what the program returns, 0 or 1
 
 static void
 sigterm_handler(int sig)
@@ -461,6 +510,16 @@ const AVIOInterruptCB int_cb = { decode_interrupt_cb, NULL };
 static void ffmpeg_cleanup(int ret)
 {
     int i, j;
+    if(ret > 0 && ret != 255) {
+        if(runtime_error) {
+            char buf[80];
+            snprintf(buf,sizeof(buf)-1,"error: %s", av_err2str(runtime_error));
+            report_status(buf);
+        }
+        else {
+            report_status("error: invalid program parameters");
+        }
+    }
 
     if (do_benchmark) {
         int maxrss = getmaxrss() / 1024;
@@ -765,6 +824,7 @@ static void write_packet(OutputFile *of, AVPacket *pkt, OutputStream *ost)
     if (ret < 0) {
         print_error("av_interleaved_write_frame()", ret);
         main_return_code = 1;
+        runtime_error = ret;
         close_all_output_streams(ost, MUXER_FINISHED | ENCODER_FINISHED, ENCODER_FINISHED);
     }
     av_packet_unref(pkt);
@@ -2102,11 +2162,11 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
                        ist->resample_sample_rate    != decoded_frame->sample_rate;
     if (resample_changed) {
         char layout1[64], layout2[64];
-
         if (!guess_input_channel_layout(ist)) {
             av_log(NULL, AV_LOG_FATAL, "Unable to find default channel "
                    "layout for Input Stream #%d.%d\n", ist->file_index,
                    ist->st->index);
+            runtime_error = AVERROR(EINVAL);
             exit_program(1);
         }
         decoded_frame->channel_layout = avctx->channel_layout;
@@ -2132,7 +2192,9 @@ static int decode_audio(InputStream *ist, AVPacket *pkt, int *got_output)
         for (i = 0; i < nb_filtergraphs; i++)
             if (ist_in_filtergraph(filtergraphs[i], ist)) {
                 FilterGraph *fg = filtergraphs[i];
-                if (configure_filtergraph(fg) < 0) {
+                int ret = configure_filtergraph(fg);
+                if (ret < 0) {
+                    runtime_error = ret;
                     av_log(NULL, AV_LOG_FATAL, "Error reinitializing filters!\n");
                     exit_program(1);
                 }
@@ -2309,8 +2371,10 @@ static int decode_video(InputStream *ist, AVPacket *pkt, int *got_output, int eo
         ist->resample_pix_fmt = decoded_frame->format;
 
         for (i = 0; i < nb_filtergraphs; i++) {
+            int ret;
             if (ist_in_filtergraph(filtergraphs[i], ist) && ist->reinit_filters &&
-                configure_filtergraph(filtergraphs[i]) < 0) {
+                (ret = configure_filtergraph(filtergraphs[i])) < 0) {
+                runtime_error = ret;
                 av_log(NULL, AV_LOG_FATAL, "Error reinitializing filters!\n");
                 exit_program(1);
             }
@@ -2505,6 +2569,7 @@ static int process_input_packet(InputStream *ist, const AVPacket *pkt, int no_eo
         if (ret < 0) {
             av_log(NULL, AV_LOG_ERROR, "Error while decoding stream #%d:%d: %s\n",
                    ist->file_index, ist->st->index, av_err2str(ret));
+            runtime_error = ret;
             if (exit_on_error)
                 exit_program(1);
             // Decoding might not terminate if we're draining the decoder, and
@@ -3120,6 +3185,7 @@ static void parse_forced_key_frames(char *kf, OutputStream *ost,
     size = n;
     pts = av_malloc_array(size, sizeof(*pts));
     if (!pts) {
+        runtime_error = AVERROR(ENOMEM);
         av_log(NULL, AV_LOG_FATAL, "Could not allocate forced key frames array.\n");
         exit_program(1);
     }
@@ -3139,6 +3205,7 @@ static void parse_forced_key_frames(char *kf, OutputStream *ost,
             if (avf->nb_chapters > INT_MAX - size ||
                 !(pts = av_realloc_f(pts, size += avf->nb_chapters - 1,
                                      sizeof(*pts)))) {
+                runtime_error = AVERROR(ENOMEM);
                 av_log(NULL, AV_LOG_FATAL,
                        "Could not allocate forced key frames array.\n");
                 exit_program(1);
@@ -3306,7 +3373,9 @@ static int transcode_init(void)
                  enc_ctx->codec_type == AVMEDIA_TYPE_AUDIO) &&
                  filtergraph_is_simple(ost->filter->graph)) {
                     FilterGraph *fg = ost->filter->graph;
-                    if (configure_filtergraph(fg)) {
+                    int ret = configure_filtergraph(fg);
+                    if (ret) {
+                        runtime_error = ret;
                         av_log(NULL, AV_LOG_FATAL, "Error opening filters!\n");
                         exit_program(1);
                     }
@@ -4033,9 +4102,7 @@ static int process_input(int file_index)
     }
     if (ret < 0) {
         if (ret != AVERROR_EOF) {
-            print_error(is->filename, ret);
-            if (exit_on_error)
-                exit_program(1);
+            exit_error(is->filename, ret, exit_on_error);
         }
 
         for (i = 0; i < ifile->nb_streams; i++) {
@@ -4369,7 +4436,7 @@ static int transcode(void)
     if ((ret = init_input_threads()) < 0)
         goto fail;
 #endif
-
+    report_status("up");
     while (!received_sigterm) {
         int64_t cur_time= av_gettime_relative();
 
@@ -4530,6 +4597,45 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
 {
 }
 
+static void log_callback_syslog(void *ptr, int level, const char *fmt, va_list vl)
+{
+    int i;
+    static int print_prefix = 1;
+    AVClass *avc = ptr ? *(AVClass**)ptr : NULL;
+    static struct
+    {
+        int ffmpeg;
+        int fflevel;
+    } map[] =
+    {
+        { AV_LOG_PANIC,  LOG_EMERG    },
+        { AV_LOG_FATAL,  LOG_ALERT    },
+        { AV_LOG_ERROR,  LOG_ERR      },
+        { AV_LOG_WARNING, LOG_WARNING },
+        { AV_LOG_INFO,   LOG_NOTICE   },
+        { AV_LOG_VERBOSE, LOG_INFO    },
+        { AV_LOG_DEBUG,  LOG_DEBUG    },
+    };
+
+    if (level > av_log_get_level())
+        return;
+    for(i = 0; i < FF_ARRAY_ELEMS(map); i++)
+    {
+        if(level != map[i].ffmpeg)
+            continue;
+        
+        if (print_prefix && avc) {
+            char line[1024];
+            snprintf(line, sizeof(line), "[%s @ %p] %s", avc->item_name(ptr), ptr, fmt);
+            vsyslog(map[i].fflevel, line, vl);
+        } else {
+            vsyslog(map[i].fflevel, fmt, vl);
+        }
+        print_prefix = strstr(fmt, "\n") != NULL;
+        break;
+    }
+}
+
 int main(int argc, char **argv)
 {
     int i, ret;
@@ -4551,6 +4657,12 @@ int main(int argc, char **argv)
         argv++;
     }
 
+    ret = locate_option(argc, argv, options, "syslog");
+    if (ret && argv[ret + 1]) {
+        openlog(argv[ret + 1], 0, LOG_USER);
+        av_log_set_callback(log_callback_syslog);
+    }
+
     avcodec_register_all();
 #if CONFIG_AVDEVICE
     avdevice_register_all();
@@ -4563,8 +4675,10 @@ int main(int argc, char **argv)
 
     /* parse options and open all input/output files */
     ret = ffmpeg_parse_options(argc, argv);
-    if (ret < 0)
+    if (ret < 0) {
+        runtime_error = ret;
         exit_program(1);
+    }
 
     if (nb_output_files <= 0 && nb_input_files == 0) {
         show_usage();
@@ -4589,7 +4703,8 @@ int main(int argc, char **argv)
     }
 
     current_time = ti = getutime();
-    if (transcode() < 0)
+    runtime_error = transcode();
+    if(runtime_error < 0)
         exit_program(1);
     ti = getutime() - ti;
     if (do_benchmark) {
@@ -4597,9 +4712,13 @@ int main(int argc, char **argv)
     }
     av_log(NULL, AV_LOG_DEBUG, "%"PRIu64" frames successfully decoded, %"PRIu64" decoding errors\n",
            decode_error_stat[0], decode_error_stat[1]);
-    if ((decode_error_stat[0] + decode_error_stat[1]) * max_error_rate < decode_error_stat[1])
-        exit_program(69);
+//    if ((decode_error_stat[0] + decode_error_stat[1]) * max_error_rate < decode_error_stat[1])
+//        exit_program(69);
 
     exit_program(received_nb_signals ? 255 : main_return_code);
     return main_return_code;
 }
+
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

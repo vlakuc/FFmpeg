@@ -35,7 +35,7 @@
 
 #include "alsa.h"
 
-static av_cold snd_pcm_format_t codec_id_to_pcm_format(int codec_id)
+static av_cold snd_pcm_format_t codec_id_to_pcm_format(enum AVCodecID codec_id)
 {
     switch(codec_id) {
         case AV_CODEC_ID_PCM_F64LE: return SND_PCM_FORMAT_FLOAT64_LE;
@@ -61,6 +61,36 @@ static av_cold snd_pcm_format_t codec_id_to_pcm_format(int codec_id)
         default:                 return SND_PCM_FORMAT_UNKNOWN;
     }
 }
+
+
+static av_cold enum AVCodecID pcm_format_to_codec_id(snd_pcm_format_t fmt_id)
+{
+    switch(fmt_id) {
+        case SND_PCM_FORMAT_FLOAT64_LE: return AV_CODEC_ID_PCM_F64LE;
+        case SND_PCM_FORMAT_FLOAT64_BE: return AV_CODEC_ID_PCM_F64BE;
+        case SND_PCM_FORMAT_FLOAT_LE:   return AV_CODEC_ID_PCM_F32LE;
+        case SND_PCM_FORMAT_FLOAT_BE:   return AV_CODEC_ID_PCM_F32BE;
+        case SND_PCM_FORMAT_S32_LE:     return AV_CODEC_ID_PCM_S32LE;
+        case SND_PCM_FORMAT_S32_BE:     return AV_CODEC_ID_PCM_S32BE;
+        case SND_PCM_FORMAT_U32_LE:     return AV_CODEC_ID_PCM_U32LE;
+        case SND_PCM_FORMAT_U32_BE:     return AV_CODEC_ID_PCM_U32BE;
+        case SND_PCM_FORMAT_S24_3LE:    return AV_CODEC_ID_PCM_S24LE;
+        case SND_PCM_FORMAT_S24_3BE:    return AV_CODEC_ID_PCM_S24BE;
+        case SND_PCM_FORMAT_U24_3LE:    return AV_CODEC_ID_PCM_U24LE;
+        case SND_PCM_FORMAT_U24_3BE:    return AV_CODEC_ID_PCM_U24BE;
+        case SND_PCM_FORMAT_S16_LE:     return AV_CODEC_ID_PCM_S16LE;
+        case SND_PCM_FORMAT_S16_BE:     return AV_CODEC_ID_PCM_S16BE;
+        case SND_PCM_FORMAT_U16_LE:     return AV_CODEC_ID_PCM_U16LE;
+        case SND_PCM_FORMAT_U16_BE:     return AV_CODEC_ID_PCM_U16BE;
+        case SND_PCM_FORMAT_S8:         return AV_CODEC_ID_PCM_S8;
+        case SND_PCM_FORMAT_U8:         return AV_CODEC_ID_PCM_U8;
+        case SND_PCM_FORMAT_MU_LAW:     return AV_CODEC_ID_PCM_MULAW;
+        case SND_PCM_FORMAT_A_LAW:      return AV_CODEC_ID_PCM_ALAW;
+        default:                        return AV_CODEC_ID_NONE;
+            
+    }
+}
+
 
 #define MAKE_REORDER_FUNC(NAME, TYPE, CHANNELS, LAYOUT, MAP)                \
 static void alsa_reorder_ ## NAME ## _ ## LAYOUT(const void *in_v,          \
@@ -168,18 +198,29 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
                          unsigned int *sample_rate,
                          int channels, enum AVCodecID *codec_id)
 {
+    return ff_alsa_open2(ctx, mode, sample_rate, &channels, codec_id);
+}
+
+av_cold int ff_alsa_open2(AVFormatContext *ctx, snd_pcm_stream_t mode,
+                         unsigned int *sample_rate,
+                         int *channels, enum AVCodecID *codec_id)
+{
     AlsaData *s = ctx->priv_data;
     const char *audio_device;
-    int res, flags = 0;
+    int res, flags = 0, max_channels;
     snd_pcm_format_t format;
     snd_pcm_t *h;
     snd_pcm_hw_params_t *hw_params;
     snd_pcm_uframes_t buffer_size, period_size;
     uint64_t layout = ctx->streams[0]->codecpar->channel_layout;
 
+    av_log(ctx, AV_LOG_VERBOSE, "ff_alsa_open: audio_device=%s codec=0x%04x\n",
+           ctx->filename, *codec_id);
+
     if (ctx->filename[0] == 0) audio_device = "default";
     else                       audio_device = ctx->filename;
 
+    /*
     if (*codec_id == AV_CODEC_ID_NONE)
         *codec_id = DEFAULT_CODEC_ID;
     format = codec_id_to_pcm_format(*codec_id);
@@ -187,7 +228,17 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
         av_log(ctx, AV_LOG_ERROR, "sample format 0x%04x is not supported\n", *codec_id);
         return AVERROR(ENOSYS);
     }
-    s->frame_size = av_get_bits_per_sample(*codec_id) / 8 * channels;
+    */
+    if (*codec_id != AV_CODEC_ID_NONE) {
+        format = codec_id_to_pcm_format(*codec_id);
+        if (format == SND_PCM_FORMAT_UNKNOWN) {
+            av_log(ctx, AV_LOG_ERROR, "sample format for codec 0x%04x is not supported\n", *codec_id);
+            return AVERROR(ENOSYS);
+        }
+    } else {
+        format = SND_PCM_FORMAT_UNKNOWN;
+    }
+    //s->frame_size = av_get_bits_per_sample(*codec_id) / 8 * channels;
 
     if (ctx->flags & AVFMT_FLAG_NONBLOCK) {
         flags = SND_PCM_NONBLOCK;
@@ -220,12 +271,69 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
         goto fail;
     }
 
+    /*
     res = snd_pcm_hw_params_set_format(h, hw_params, format);
     if (res < 0) {
         av_log(ctx, AV_LOG_ERROR, "cannot set sample format 0x%04x %d (%s)\n",
                *codec_id, format, snd_strerror(res));
         goto fail;
     }
+    */
+
+    if (format == SND_PCM_FORMAT_UNKNOWN) {
+        /* first try default format, if this fails use first format from config space */
+        format = codec_id_to_pcm_format(DEFAULT_CODEC_ID);
+        res = snd_pcm_hw_params_set_format(h, hw_params, format);
+        if (res < 0) {
+            av_log(ctx, AV_LOG_VERBOSE, "cannot set default sample format 0x%04x (%s)\n",
+                   format, snd_strerror(res));
+            
+            /* there can be more than one format in the config space, restrict to the first one only */
+            res = snd_pcm_hw_params_set_format_first(h, hw_params, &format);
+            if (res < 0) {
+                av_log(ctx, AV_LOG_ERROR, "cannot set first sample format (%s)\n",
+                       snd_strerror(res));
+                goto fail;
+            }
+            av_log(ctx, AV_LOG_VERBOSE, "set first sample format %04x\n", format);
+        }
+    } else {
+        res = snd_pcm_hw_params_set_format(h, hw_params, format);
+        if (res < 0) {
+            av_log(ctx, AV_LOG_ERROR, "cannot set sample format 0x%04x (%s)\n",
+                   format, snd_strerror(res));
+            goto fail;
+        }
+    }
+
+    res = snd_pcm_hw_params_get_channels_max(hw_params, &max_channels);
+    if (res < 0) {
+        av_log(ctx, AV_LOG_ERROR, "cannot get maximum audio channels (%s)\n",
+               snd_strerror(res));
+        goto fail;
+    }
+    if(*channels > max_channels)
+    {
+        *channels = max_channels;
+        av_log(ctx, AV_LOG_INFO, "set audio channels to %d\n", max_channels);
+    }
+
+    res = snd_pcm_hw_params_set_channels(h, hw_params, *channels);
+    if (res < 0) {
+        av_log(ctx, AV_LOG_ERROR, "cannot set channel count to %d (%s)\n",
+               *channels, snd_strerror(res));
+        goto fail;
+    }
+
+    *codec_id = pcm_format_to_codec_id(format);
+    if (*codec_id == AV_CODEC_ID_NONE) {
+        av_log(ctx, AV_LOG_ERROR, "cannot find codec for format %04x\n", format);
+        goto fail;
+    }
+    av_log(ctx, AV_LOG_VERBOSE, "set codec %04x\n", *codec_id);
+    
+    s->frame_size = av_get_bits_per_sample(*codec_id) / 8 * (*channels);
+
 
     res = snd_pcm_hw_params_set_rate_near(h, hw_params, sample_rate, 0);
     if (res < 0) {
@@ -233,13 +341,7 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
                snd_strerror(res));
         goto fail;
     }
-
-    res = snd_pcm_hw_params_set_channels(h, hw_params, channels);
-    if (res < 0) {
-        av_log(ctx, AV_LOG_ERROR, "cannot set channel count to %d (%s)\n",
-               channels, snd_strerror(res));
-        goto fail;
-    }
+    av_log(ctx, AV_LOG_INFO, "set sample rate to %u\n", *sample_rate);
 
     snd_pcm_hw_params_get_buffer_size_max(hw_params, &buffer_size);
     buffer_size = FFMIN(buffer_size, ALSA_BUFFER_SIZE_MAX);
@@ -271,10 +373,10 @@ av_cold int ff_alsa_open(AVFormatContext *ctx, snd_pcm_stream_t mode,
 
     snd_pcm_hw_params_free(hw_params);
 
-    if (channels > 2 && layout) {
+    if (*channels > 2 && layout) {
         if (find_reorder_func(s, *codec_id, layout, mode == SND_PCM_STREAM_PLAYBACK) < 0) {
             char name[128];
-            av_get_channel_layout_string(name, sizeof(name), channels, layout);
+            av_get_channel_layout_string(name, sizeof(name), *channels, layout);
             av_log(ctx, AV_LOG_WARNING, "ALSA channel layout unknown or unimplemented for %s %s.\n",
                    name, mode == SND_PCM_STREAM_PLAYBACK ? "playback" : "capture");
         }
@@ -312,7 +414,9 @@ int ff_alsa_xrun_recover(AVFormatContext *s1, int err)
     AlsaData *s = s1->priv_data;
     snd_pcm_t *handle = s->h;
 
-    av_log(s1, AV_LOG_WARNING, "ALSA buffer xrun.\n");
+    if(s->npackets > 0) {
+        av_log(s1, AV_LOG_WARNING, "ALSA buffer xrun.\n");
+    }
     if (err == -EPIPE) {
         err = snd_pcm_prepare(handle);
         if (err < 0) {

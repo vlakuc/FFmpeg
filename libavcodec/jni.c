@@ -77,3 +77,4 @@ void *av_jni_get_java_vm(void *log_ctx)
 }
 
 #endif
+

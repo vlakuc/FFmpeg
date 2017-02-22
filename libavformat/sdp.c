@@ -24,6 +24,7 @@
 #include "libavutil/dict.h"
 #include "libavutil/parseutils.h"
 #include "libavutil/opt.h"
+#include "libavutil/time.h"
 #include "libavcodec/xiph.h"
 #include "libavcodec/mpeg4audio.h"
 #include "avformat.h"
@@ -37,6 +38,10 @@
 
 #if CONFIG_RTP_MUXER
 #define MAX_EXTRADATA_SIZE ((INT_MAX - 10) / 2)
+
+#define FAKE_PORT_FOR_ANNOUNCE 1
+
+#define SDP_TOOLNAME "Epiphan Streamer"
 
 struct sdp_session_level {
     int sdp_version;      /**< protocol version (currently 0) */
@@ -53,7 +58,22 @@ struct sdp_session_level {
     const char *dst_addr; /**< destination IP address (can be multicast) */
     const char *dst_type; /**< destination IP address type */
     const char *name;     /**< session name (can be an empty string) */
+    const char *info;           /**< session information (can be an empty string) */
+    const char *plgroup;        /**< Playlist group (can be an empty string) */
+    const char *tool;    /**< name and version number of the tool used to create the session description */
+    int         channel_no;     /**< Channel number */
 };
+
+// Write single SDP line
+static void sdp_write_line(char* buf, int size, const char* attr, const char* format, ...)
+{
+    va_list vl;
+    va_start(vl, format);
+    av_strlcatf (buf, size, "%s=", attr);
+    av_vstrlcatf(buf, size, format, vl);
+    av_strlcatf (buf, size, "\r\n");
+    va_end(vl);
+}
 
 static void sdp_write_address(char *buff, int size, const char *dest_addr,
                               const char *dest_type, int ttl)
@@ -79,10 +99,25 @@ static void sdp_write_header(char *buff, int size, struct sdp_session_level *s)
                             s->sdp_version,
                             s->id, s->version, s->src_type, s->src_addr,
                             s->name);
+    if (s->info && *s->info)
+        sdp_write_line(buff, size, "i", "%s",                   s->info);
     sdp_write_address(buff, size, s->dst_addr, s->dst_type, s->ttl);
-    av_strlcatf(buff, size, "t=%d %d\r\n"
-                            "a=tool:libavformat " AV_STRINGIFY(LIBAVFORMAT_VERSION) "\r\n",
-                            s->start_time, s->end_time);
+    sdp_write_line(buff, size, "t", "%d %d",                    s->start_time, s->end_time);
+    // Category / playlist group
+    if (s->plgroup){
+        sdp_write_line(buff, size, "a", "cat:%s",               s->plgroup);    // dot-separated hierarchical category of the session
+        sdp_write_line(buff, size, "a", "x-plgroup:%s",         s->plgroup);    // Compatibility with VLC (before 2.0)
+        sdp_write_line(buff, size, "a", "exterityGroups:%s",    s->plgroup);    // Compatibility with Exterity receivers
+    }
+    if (s->channel_no > 0) {
+        sdp_write_line(buff, size, "a", "exterityChannelNo:%d", s->channel_no); // Compatibility with Exterity receivers
+    }
+    sdp_write_line(buff, size, "a", "tool:%s", s->tool ? s->tool : SDP_TOOLNAME);
+    /* Broadcast is always on? Then why is this flag needed? */
+//    if (s->broadcast) {
+        sdp_write_line(buff, size, "a", "recvonly");
+        sdp_write_line(buff, size, "a", "type:broadcast");
+//    }
 }
 
 #if CONFIG_NETWORK
@@ -126,27 +161,24 @@ static int sdp_get_address(char *dest_addr, int size, int *ttl, const char *url)
     char proto[32];
 
     av_url_split(proto, sizeof(proto), NULL, 0, dest_addr, size, &port, NULL, 0, url);
-
+    
     *ttl = 0;
-
-    if (strcmp(proto, "rtp") && strcmp(proto, "srtp")) {
+    if (strcmp(proto, "rtp") && strcmp(proto, "srtp") && strcmp(proto, "udp")) {
         /* The url isn't for the actual rtp sessions,
          * don't parse out anything else than the destination.
          */
         return 0;
     }
-
+    
     p = strchr(url, '?');
     if (p) {
         char buff[64];
-
         if (av_find_info_tag(buff, sizeof(buff), "ttl", p)) {
             *ttl = strtol(buff, NULL, 10);
         } else {
             *ttl = 5;
         }
     }
-
     return port;
 }
 
@@ -488,6 +520,9 @@ static char *sdp_write_media_attributes(char *buff, int size, AVStream *st, int 
         case AV_CODEC_ID_DIRAC:
             av_strlcatf(buff, size, "a=rtpmap:%d VC2/90000\r\n", payload_type);
             break;
+        case AV_CODEC_ID_MPEG2TS:
+            sdp_write_line(buff, size, "a", "rtpmap:%d MP2T/90000",  payload_type);            
+            break;
         case AV_CODEC_ID_H264: {
             int mode = 1;
             if (fmt && fmt->oformat && fmt->oformat->priv_class &&
@@ -579,6 +614,7 @@ static char *sdp_write_media_attributes(char *buff, int size, AVStream *st, int 
             }
             break;
         case AV_CODEC_ID_PCM_S16BE:
+        case AV_CODEC_ID_PCM_S16LE:
             if (payload_type >= RTP_PT_PRIVATE)
                 av_strlcatf(buff, size, "a=rtpmap:%d L16/%d/%d\r\n",
                                          payload_type,
@@ -686,24 +722,6 @@ static char *sdp_write_media_attributes(char *buff, int size, AVStream *st, int 
                                      payload_type, p->sample_rate,
                                      payload_type, p->block_align == 38 ? 20 : 30);
             break;
-        case AV_CODEC_ID_SPEEX:
-            av_strlcatf(buff, size, "a=rtpmap:%d speex/%d\r\n",
-                                     payload_type, p->sample_rate);
-            if (st->codec) {
-                const char *mode;
-                uint64_t vad_option;
-
-                if (st->codec->flags & AV_CODEC_FLAG_QSCALE)
-                      mode = "on";
-                else if (!av_opt_get_int(st->codec, "vad", AV_OPT_FLAG_ENCODING_PARAM, &vad_option) && vad_option)
-                      mode = "vad";
-                else
-                      mode = "off";
-
-                av_strlcatf(buff, size, "a=fmtp:%d vbr=%s\r\n",
-                                        payload_type, mode);
-            }
-            break;
         case AV_CODEC_ID_OPUS:
             /* The opus RTP draft says that all opus streams MUST be declared
                as stereo, to avoid negotiation failures. The actual number of
@@ -717,6 +735,10 @@ static char *sdp_write_media_attributes(char *buff, int size, AVStream *st, int 
                 av_strlcatf(buff, size, "a=fmtp:%d sprop-stereo=1\r\n",
                                          payload_type);
             }
+            break;
+        case AV_CODEC_ID_MP3:
+            // rdavydov@ fix for wowza compatibility
+            sdp_write_line(buff, size, "a", "rtpmap:%d MPA/90000/%d", payload_type, p->channels);
             break;
         default:
             /* Nothing special to do here... */
@@ -735,9 +757,22 @@ void ff_sdp_write_media(char *buff, int size, AVStream *st, int idx,
     AVCodecParameters *p = st->codecpar;
     const char *type;
     int payload_type;
-
+    char proto[32];
+    const char *media_proto = "RTP/AVP";
     payload_type = ff_rtp_get_payload_type(fmt, st->codecpar, idx);
 
+    /* split it one more time */
+    proto[0] = 0;
+    av_url_split(proto, sizeof(proto), NULL, 0, NULL, 0, NULL, NULL, 0, fmt->filename);
+    if(proto[0] && strcmp(proto,"rtp")) {
+        if(strcmp(proto,"srtp")) {
+            media_proto = proto;
+        }
+        else {
+            media_proto = "RTP/AVP/SAVP"; /* not supported yet */
+        }
+    }
+                
     switch (p->codec_type) {
         case AVMEDIA_TYPE_VIDEO   : type = "video"      ; break;
         case AVMEDIA_TYPE_AUDIO   : type = "audio"      ; break;
@@ -745,27 +780,65 @@ void ff_sdp_write_media(char *buff, int size, AVStream *st, int idx,
         default                 : type = "application"; break;
     }
 
-    av_strlcatf(buff, size, "m=%s %d RTP/AVP %d\r\n", type, port, payload_type);
+    av_strlcatf(buff, size, "m=%s %d %s %d\r\n", type, port, media_proto, payload_type);
     sdp_write_address(buff, size, dest_addr, dest_type, ttl);
     if (p->bit_rate) {
         av_strlcatf(buff, size, "b=AS:%"PRId64"\r\n", (int64_t)p->bit_rate / 1000);
     }
 
     sdp_write_media_attributes(buff, size, st, payload_type, fmt);
+    if(st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && 
+       0 != st->codecpar->width * st->codecpar->height){
+        sdp_write_line(buff, size, "a", "framesize:%d %d-%d", payload_type, st->codecpar->width, st->codecpar->height);
+    }
+			
+}
+
+/** Gets the current time as NTP timestamp (RFC 5905 http://tools.ietf.org/html/rfc5905) 
+*/
+#define NTP_OFFSET 2208988800ULL
+#define NTP_OFFSET_US (NTP_OFFSET * 1000000ULL)
+static int64_t get_ntp_time(void)
+{
+    return ( av_gettime() / 1000) * 1000 + NTP_OFFSET_US;
+}
+
+static int get_integer_info_tag(const char *url, const char *tag, int * value)
+{
+    const char *p = strchr(url, '?');
+    if (p) {
+        char buf[64];
+
+        if (av_find_info_tag(buf, sizeof(buf), tag, p)) {
+            *value = strtol(buf, NULL, 10);
+            return 0;
+        } 
+    }
+    return -1;
 }
 
 int av_sdp_create(AVFormatContext *ac[], int n_files, char *buf, int size)
 {
     AVDictionaryEntry *title = av_dict_get(ac[0]->metadata, "title", NULL, 0);
+    AVDictionaryEntry *comment = av_dict_get(ac[0]->metadata, "comment", NULL, 0);
+    AVDictionaryEntry *plgroup = av_dict_get(ac[0]->metadata, "x-plgroup", NULL, 0);
+    AVDictionaryEntry *channel = av_dict_get(ac[0]->metadata, "x-channel", NULL, 0);
+    AVDictionaryEntry *encoder = av_dict_get(ac[0]->metadata, "encoder", NULL, 0);
+
     struct sdp_session_level s = { 0 };
     int i, j, port, ttl, is_multicast, index = 0;
     char dst[32], dst_type[5];
 
     memset(buf, 0, size);
     s.user = "-";
+    s.id = get_ntp_time();
     s.src_addr = "127.0.0.1";    /* FIXME: Properly set this */
     s.src_type = "IP4";
     s.name = title ? title->value : "No Name";
+    s.info = comment ? comment->value : NULL;
+    s.plgroup = plgroup ? plgroup->value : NULL;
+    s.channel_no = channel ? atoi(channel->value) : 0;
+    s.tool = encoder ? encoder->value : NULL;
 
     port = 0;
     ttl = 0;
@@ -789,13 +862,17 @@ int av_sdp_create(AVFormatContext *ac[], int n_files, char *buf, int size)
 
     dst[0] = 0;
     for (i = 0; i < n_files; i++) {
+        int bufferdelay = 0;
         if (n_files != 1) {
             port = sdp_get_address(dst, sizeof(dst), &ttl, ac[i]->filename);
-            is_multicast = resolve_destination(dst, sizeof(dst), dst_type,
+        is_multicast = resolve_destination(dst, sizeof(dst), dst_type,
                                                sizeof(dst_type));
             if (!is_multicast)
                 ttl = 0;
         }
+
+        get_integer_info_tag(ac[i]->filename,"bufferdelay",&bufferdelay);
+
         for (j = 0; j < ac[i]->nb_streams; j++) {
             ff_sdp_write_media(buf, size, ac[i]->streams[j], index++,
                                dst[0] ? dst : NULL, dst_type,
@@ -805,6 +882,11 @@ int av_sdp_create(AVFormatContext *ac[], int n_files, char *buf, int size)
                 av_strlcatf(buf, size,
                                    "a=control:streamid=%d\r\n", i + j);
             }
+            // Apply 'x-bufferdalay' to all streams
+            if( bufferdelay ) {
+                sdp_write_line(buf, size, "a", "x-bufferdelay:%0.1f", bufferdelay/1000.0);
+            }
+			
             if (ac[i]->pb && ac[i]->pb->av_class) {
                 uint8_t *crypto_suite = NULL, *crypto_params = NULL;
                 av_opt_get(ac[i]->pb, "srtp_out_suite",  AV_OPT_SEARCH_CHILDREN,

@@ -613,4 +613,22 @@ int vaapi_device_init(const char *device);
 int cuvid_init(AVCodecContext *s);
 int cuvid_transcode_init(OutputStream *ost);
 
+
+/**
+ * Sends a message to the status channel
+ */ 
+void report_status(const char *status);
+/**
+ * Print an error message to stderr, indicating filename and a human
+ * readable description of the error code err. If exitcode is not null,
+ * the program exits and returns this code.
+ *
+ * If strerror_r() is not available the use of this function in a
+ * multithreaded application may be unsafe.
+ *
+ * @see av_strerror()
+ */
+void exit_error(const char *filename, int err, int exitcode);
+
+
 #endif /* FFMPEG_H */

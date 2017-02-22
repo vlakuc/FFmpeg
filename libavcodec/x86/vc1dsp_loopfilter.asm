@@ -315,3 +315,5 @@ cglobal vc1_h_loop_filter8, 3,5,8
     START_H_FILTER 8
     VC1_H_LOOP_FILTER 8
     RET
+
+       

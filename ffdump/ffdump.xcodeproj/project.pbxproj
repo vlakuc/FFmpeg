@@ -1,0 +1,336 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8700F565195CAE9400821156 /* ffdump_opt.c in Sources */ = {isa = PBXBuildFile; fileRef = 8700F564195CAE9400821156 /* ffdump_opt.c */; };
+		87071B84184944200041380E /* content_sync_detector.c in Sources */ = {isa = PBXBuildFile; fileRef = 87071B83184944200041380E /* content_sync_detector.c */; };
+		872D6CF3199E7B9000B6FCC5 /* cmdutils.c in Sources */ = {isa = PBXBuildFile; fileRef = 8793F731195DA5D400C6D775 /* cmdutils.c */; };
+		875C4C7C1523BE38005CF63F /* ffdump.c in Sources */ = {isa = PBXBuildFile; fileRef = 875C4C751523BE38005CF63F /* ffdump.c */; };
+		8767651719E5C78F00A6E283 /* compare_pictures.c in Sources */ = {isa = PBXBuildFile; fileRef = 8767651519E5C78F00A6E283 /* compare_pictures.c */; };
+		87F98369152B84E50091AD63 /* average_color.c in Sources */ = {isa = PBXBuildFile; fileRef = 87F98368152B84E50091AD63 /* average_color.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		875C4C1B15226604005CF63F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8700F564195CAE9400821156 /* ffdump_opt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffdump_opt.c; sourceTree = SOURCE_ROOT; };
+		8700F566195CAEA800821156 /* ffdump_opt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ffdump_opt.h; sourceTree = SOURCE_ROOT; };
+		87071B83184944200041380E /* content_sync_detector.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = content_sync_detector.c; sourceTree = SOURCE_ROOT; };
+		87071B851849443A0041380E /* content_sync_detector.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = content_sync_detector.h; sourceTree = SOURCE_ROOT; };
+		8751B729152C995A00E5676B /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = SOURCE_ROOT; };
+		87534E3917559D8800CE75C3 /* checker_640x480.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = checker_640x480.jpg; sourceTree = "<group>"; };
+		87534E3A17559D8800CE75C3 /* test_croppings.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = test_croppings.txt; sourceTree = "<group>"; };
+		87534E3B17559D8800CE75C3 /* test.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = test.sh; sourceTree = "<group>"; };
+		875C4C1D15226604005CF63F /* ffdump */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ffdump; sourceTree = BUILT_PRODUCTS_DIR; };
+		875C4C751523BE38005CF63F /* ffdump.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ffdump.c; sourceTree = SOURCE_ROOT; };
+		875C4C761523BE38005CF63F /* ffdump.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ffdump.h; sourceTree = SOURCE_ROOT; };
+		8767651519E5C78F00A6E283 /* compare_pictures.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = compare_pictures.c; path = ../compare_pictures.c; sourceTree = "<group>"; };
+		8767651619E5C78F00A6E283 /* compare_pictures.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = compare_pictures.h; path = ../compare_pictures.h; sourceTree = "<group>"; };
+		8793F731195DA5D400C6D775 /* cmdutils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmdutils.c; path = ../cmdutils.c; sourceTree = SOURCE_ROOT; };
+		8793F732195DA5D400C6D775 /* cmdutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cmdutils.h; path = ../cmdutils.h; sourceTree = SOURCE_ROOT; };
+		87F98368152B84E50091AD63 /* average_color.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = average_color.c; sourceTree = SOURCE_ROOT; };
+		87F9836A152B84F60091AD63 /* average_color.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = average_color.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		875C4C1A15226604005CF63F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8700F560195CA8F300821156 /* ffmpeg parts */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "ffmpeg parts";
+			sourceTree = "<group>";
+		};
+		87534E3717559D7000CE75C3 /* test */ = {
+			isa = PBXGroup;
+			children = (
+				87534E3817559D8800CE75C3 /* test_data */,
+				87534E3B17559D8800CE75C3 /* test.sh */,
+			);
+			name = test;
+			sourceTree = "<group>";
+		};
+		87534E3817559D8800CE75C3 /* test_data */ = {
+			isa = PBXGroup;
+			children = (
+				87534E3917559D8800CE75C3 /* checker_640x480.jpg */,
+				87534E3A17559D8800CE75C3 /* test_croppings.txt */,
+			);
+			path = test_data;
+			sourceTree = "<group>";
+		};
+		875C4C08152265CC005CF63F = {
+			isa = PBXGroup;
+			children = (
+				87534E3717559D7000CE75C3 /* test */,
+				875C4C2015226604005CF63F /* Sources */,
+				875C4C1E15226604005CF63F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		875C4C1E15226604005CF63F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				875C4C1D15226604005CF63F /* ffdump */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		875C4C2015226604005CF63F /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				8793F731195DA5D400C6D775 /* cmdutils.c */,
+				8793F732195DA5D400C6D775 /* cmdutils.h */,
+				8700F560195CA8F300821156 /* ffmpeg parts */,
+				8751B729152C995A00E5676B /* Makefile */,
+				8767651519E5C78F00A6E283 /* compare_pictures.c */,
+				8767651619E5C78F00A6E283 /* compare_pictures.h */,
+				87F98368152B84E50091AD63 /* average_color.c */,
+				87F9836A152B84F60091AD63 /* average_color.h */,
+				87071B83184944200041380E /* content_sync_detector.c */,
+				87071B851849443A0041380E /* content_sync_detector.h */,
+				8700F564195CAE9400821156 /* ffdump_opt.c */,
+				8700F566195CAEA800821156 /* ffdump_opt.h */,
+				875C4C751523BE38005CF63F /* ffdump.c */,
+				875C4C761523BE38005CF63F /* ffdump.h */,
+			);
+			name = Sources;
+			path = ffdump;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		875C4C1C15226604005CF63F /* ffdump */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 875C4C2515226604005CF63F /* Build configuration list for PBXNativeTarget "ffdump" */;
+			buildPhases = (
+				875C4C1915226604005CF63F /* Sources */,
+				875C4C1A15226604005CF63F /* Frameworks */,
+				875C4C1B15226604005CF63F /* CopyFiles */,
+				87534E3D1755A3EB00CE75C3 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ffdump;
+			productName = ffdump;
+			productReference = 875C4C1D15226604005CF63F /* ffdump */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		875C4C0A152265CC005CF63F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = 875C4C0D152265CC005CF63F /* Build configuration list for PBXProject "ffdump" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 875C4C08152265CC005CF63F;
+			productRefGroup = 875C4C1E15226604005CF63F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				875C4C1C15226604005CF63F /* ffdump */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		87534E3D1755A3EB00CE75C3 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "export FFDUMP=$TARGET_BUILD_DIR/ffdump\n./test.sh";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		875C4C1915226604005CF63F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				875C4C7C1523BE38005CF63F /* ffdump.c in Sources */,
+				87071B84184944200041380E /* content_sync_detector.c in Sources */,
+				8767651719E5C78F00A6E283 /* compare_pictures.c in Sources */,
+				87F98369152B84E50091AD63 /* average_color.c in Sources */,
+				872D6CF3199E7B9000B6FCC5 /* cmdutils.c in Sources */,
+				8700F565195CAE9400821156 /* ffdump_opt.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		875C4C0F152265CC005CF63F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_LINK_WITH_DYNAMIC_LIBRARIES = NO;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		875C4C10152265CC005CF63F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_LINK_WITH_DYNAMIC_LIBRARIES = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		875C4C2615226604005CF63F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = (
+					"../**",
+					/usr/local/lib,
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-lbz2",
+					"-lavutil",
+					"-lavformat",
+					"-lavcodec",
+					"-lavdevice",
+					"-lavfilter",
+					"-lz",
+					"-lmp3lame",
+					"-lx264",
+					"-liconv",
+					"-lswscale",
+					"-lswresample",
+					"-lpostproc",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = ../;
+			};
+			name = Debug;
+		};
+		875C4C2715226604005CF63F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				LIBRARY_SEARCH_PATHS = (
+					"../**",
+					/usr/local/lib,
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				OTHER_LDFLAGS = (
+					"-lbz2",
+					"-lavutil",
+					"-lavformat",
+					"-lavcodec",
+					"-lavdevice",
+					"-lavfilter",
+					"-lz",
+					"-lmp3lame",
+					"-lx264",
+					"-liconv",
+					"-lswscale",
+					"-lswresample",
+					"-lpostproc",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = ../;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		875C4C0D152265CC005CF63F /* Build configuration list for PBXProject "ffdump" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				875C4C0F152265CC005CF63F /* Debug */,
+				875C4C10152265CC005CF63F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		875C4C2515226604005CF63F /* Build configuration list for PBXNativeTarget "ffdump" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				875C4C2615226604005CF63F /* Debug */,
+				875C4C2715226604005CF63F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 875C4C0A152265CC005CF63F /* Project object */;
+}

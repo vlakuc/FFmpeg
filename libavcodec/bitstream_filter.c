@@ -37,7 +37,7 @@ AVBitStreamFilter *av_bitstream_filter_next(const AVBitStreamFilter *f)
     while (filter != f)
         filter = av_bsf_next(&opaque);
 
-    return av_bsf_next(&opaque);
+    return (AVBitStreamFilter *)av_bsf_next(&opaque);
 }
 
 void av_register_bitstream_filter(AVBitStreamFilter *bsf)
@@ -68,7 +68,7 @@ AVBitStreamFilterContext *av_bitstream_filter_init(const char *name)
         goto fail;
 
 
-    ctx->filter    = bsf;
+    ctx->filter    = (AVBitStreamFilter*)bsf;
     ctx->priv_data = priv;
 
     return ctx;
@@ -130,7 +130,7 @@ int av_bitstream_filter_filter(AVBitStreamFilterContext *bsfc,
             return ret;
     }
 
-    pkt.data = buf;
+    pkt.data = (uint8_t*)buf;
     pkt.size = buf_size;
 
     ret = av_bsf_send_packet(priv->ctx, &pkt);

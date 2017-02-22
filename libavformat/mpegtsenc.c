@@ -113,6 +113,8 @@ typedef struct MpegTSWrite {
     int64_t last_sdt_ts;
 
     int omit_video_pes_length;
+
+    int calculate_expected_file_size;       /* Update AVFormatContext::expected_file_size */
 } MpegTSWrite;
 
 /* a PES packet header is generated every DEFAULT_PES_HEADER_FREQ packets */
@@ -211,7 +213,7 @@ static int mpegts_write_section1(MpegTSSection *s, int tid, int id,
 /*********************************************/
 /* mpegts writer */
 
-#define DEFAULT_PROVIDER_NAME   "FFmpeg"
+#define DEFAULT_PROVIDER_NAME   "Epiphan Streamer"
 #define DEFAULT_SERVICE_NAME    "Service01"
 
 /* we retransmit the SI info at this rate */
@@ -771,8 +773,11 @@ static int mpegts_init(AVFormatContext *s)
         if (!title)
             title = av_dict_get(s->metadata, "title", NULL, 0);
         service_name  = title ? title->value : DEFAULT_SERVICE_NAME;
+        
         provider      = av_dict_get(s->metadata, "service_provider", NULL, 0);
-        provider_name = provider ? provider->value : DEFAULT_PROVIDER_NAME;
+        if (!provider|| *(provider->value) )
+            provider  = av_dict_get(s->metadata, "author", NULL, 0);    
+        provider_name = (provider && *(provider->value)) ? provider->value : DEFAULT_PROVIDER_NAME;
         service       = mpegts_add_service(ts, ts->service_id,
                                            provider_name, service_name);
 
@@ -789,8 +794,13 @@ static int mpegts_init(AVFormatContext *s)
             if (!title)
                 title = av_dict_get(program->metadata, "title", NULL, 0);
             service_name  = title ? title->value : DEFAULT_SERVICE_NAME;
+
             provider      = av_dict_get(program->metadata, "service_provider", NULL, 0);
-            provider_name = provider ? provider->value : DEFAULT_PROVIDER_NAME;
+            if (!provider || *(provider->value))
+                provider  = av_dict_get(program->metadata, "author", NULL, 0);
+            if (!provider || *(provider->value))
+                provider  = av_dict_get(s->metadata, "author", NULL, 0);
+            provider_name = (provider && *(provider->value)) ? provider->value : DEFAULT_PROVIDER_NAME;
             service       = mpegts_add_service(ts, program->id,
                                                provider_name, service_name);
 
@@ -1740,12 +1750,18 @@ static void mpegts_write_flush(AVFormatContext *s)
 
 static int mpegts_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
+    MpegTSWrite *ts = s->priv_data;
+    int res = 1;
     if (!pkt) {
         mpegts_write_flush(s);
-        return 1;
     } else {
-        return mpegts_write_packet_internal(s, pkt);
+        res = mpegts_write_packet_internal(s, pkt);
     }
+    
+    if (res >= 0 && (!(s->flags & AVFMT_NOFILE)) && s->pb->seekable && ts->calculate_expected_file_size)
+        s->expected_file_size = avio_tell(s->pb);
+
+    return res;
 }
 
 static int mpegts_write_end(AVFormatContext *s)
@@ -1894,6 +1910,10 @@ static const AVOption options[] = {
     { "sdt_period", "SDT retransmission time limit in seconds",
       offsetof(MpegTSWrite, sdt_period), AV_OPT_TYPE_DOUBLE,
       { .dbl = INT_MAX }, 0, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM },
+
+    { "calculate_expected_file_size", "Calculate expected_file_size",
+      offsetof(MpegTSWrite, calculate_expected_file_size), AV_OPT_TYPE_BOOL, 
+      { .i64 = 0 }, 0, 1, AV_OPT_FLAG_ENCODING_PARAM },  
     { NULL },
 };
 

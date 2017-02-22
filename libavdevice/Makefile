@@ -50,6 +50,7 @@ OBJS-$(CONFIG_VFWCAP_INDEV)              += vfwcap.o
 OBJS-$(CONFIG_X11GRAB_INDEV)             += x11grab.o
 OBJS-$(CONFIG_X11GRAB_XCB_INDEV)         += xcbgrab.o
 OBJS-$(CONFIG_XV_OUTDEV)                 += xv.o
+OBJS-$(CONFIG_SHMEM_INDEV)               += shmem_dec.o
 
 # external libraries
 OBJS-$(CONFIG_LIBCDIO_INDEV)             += libcdio.o

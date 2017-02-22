@@ -35,6 +35,10 @@
 #include "internal.h"
 #include "qsvdec.h"
 
+
+// Epiphan: for  FF_DISABLE_DEPRECATION_WARNINGS/FF_ENABLE_DEPRECATION_WARNINGS
+#include "libavutil/internal.h"
+
 enum LoadPlugin {
     LOAD_PLUGIN_NONE,
     LOAD_PLUGIN_HEVC_SW,

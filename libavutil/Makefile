@@ -7,6 +7,7 @@ HEADERS = adler32.h                                                     \
           aes_ctr.h                                                     \
           attributes.h                                                  \
           audio_fifo.h                                                  \
+          audio_level.h                                                 \
           avassert.h                                                    \
           avstring.h                                                    \
           avutil.h                                                      \
@@ -15,9 +16,12 @@ HEADERS = adler32.h                                                     \
           bprint.h                                                      \
           bswap.h                                                       \
           buffer.h                                                      \
+          calculate_bitrate.h	                                        \
           cast5.h                                                       \
           camellia.h                                                    \
           channel_layout.h                                              \
+          colorspace.h                                                  \
+          circular_buffer.h						\
           common.h                                                      \
           cpu.h                                                         \
           crc.h                                                         \
@@ -56,6 +60,7 @@ HEADERS = adler32.h                                                     \
           pixelutils.h                                                  \
           pixfmt.h                                                      \
           random_seed.h                                                 \
+	  rate_counter.h						\
           rc4.h                                                         \
           rational.h                                                    \
           replaygain.h                                                  \
@@ -90,14 +95,17 @@ OBJS = adler32.o                                                        \
        aes.o                                                            \
        aes_ctr.o                                                        \
        audio_fifo.o                                                     \
+       audio_level.o                                                    \
        avstring.o                                                       \
        base64.o                                                         \
        blowfish.o                                                       \
        bprint.o                                                         \
        buffer.o                                                         \
+       calculate_bitrate.o						\
        cast5.o                                                          \
        camellia.o                                                       \
        channel_layout.o                                                 \
+       circular_buffer.o						\
        color_utils.o                                                    \
        cpu.o                                                            \
        crc.o                                                            \
@@ -134,6 +142,7 @@ OBJS = adler32.o                                                        \
        pixelutils.o                                                     \
        random_seed.o                                                    \
        rational.o                                                       \
+       rate_counter.o							\
        reverse.o                                                        \
        rc4.o                                                            \
        ripemd.o                                                         \

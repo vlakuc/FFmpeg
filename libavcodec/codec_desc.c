@@ -2173,6 +2173,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .profiles  = NULL_IF_CONFIG_SMALL(ff_aac_profiles),
     },
     {
+        .id        = AV_CODEC_ID_AUDIO_LEVEL,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "audio_level",
+        .long_name = NULL_IF_CONFIG_SMALL("Audio level"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
         .id        = AV_CODEC_ID_AC3,
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "ac3",

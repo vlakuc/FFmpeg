@@ -1,0 +1,1284 @@
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff ce0d ffff e7d6 ffff ce0d ffff  ................\n00000010: e7d6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc05 ffff e7e2 ffff dc05 ffff  ................\n00000010: e7e2                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c6 ffff dc01 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c5 ffff dbfe ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c6 ffff dbfd ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c6 ffff dbfc ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7cb ffff dbfc ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7cb ffff dbfa ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7cc ffff dbfd ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7ca ffff dbfe ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c4 ffff dc00 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7ca ffff dc01 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c7 ffff dc02 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c7 ffff dc01 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c9 ffff dc00 ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c5 ffff dbfd ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf8 ffff e7c4 ffff dbf8 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c4 ffff dbf9 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c8 ffff dbfc ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff ced4 ffff e7c5 ffff ced4 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff cc6d ffff e7d5 ffff cc6d ffff  .....m.......m..\n00000010: e7d5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7ce ffff dbfa ffff  ................\n00000010: e7ce                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7ce ffff dbfe ffff  ................\n00000010: e7ce                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c5 ffff dbfe ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7ca ffff dc02 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc04 ffff e7cc ffff dc04 ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c6 ffff dc01 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c5 ffff dc02 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7ca ffff dc00 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c7 ffff dbfd ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c4 ffff dbf9 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c6 ffff dbf9 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7cd ffff dbfd ffff  ................\n00000010: e7cd                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7cc ffff dbfd ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c5 ffff dbfb ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c8 ffff dbff ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c5 ffff dc00 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc04 ffff e7cc ffff dc04 ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c5 ffff dc01 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c3 ffff dc00 ffff  ................\n00000010: e7c3                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d021 ffff e7c5 ffff d021 ffff  .....!.......!..\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff caa5 ffff e7cd ffff caa5 ffff  ................\n00000010: e7cd                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7cb ffff dc02 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7cb ffff dc00 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c6 ffff dbfe ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7cb ffff dbfc ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c9 ffff dbfa ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7cb ffff dbfa ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c5 ffff dbf9 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c6 ffff dbfc ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c4 ffff dbfe ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c6 ffff dc00 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c7 ffff dc02 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7ca ffff dc02 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c7 ffff dc01 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7ca ffff dc01 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c7 ffff dbfd ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c3 ffff dbf9 ffff  ................\n00000010: e7c3                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c4 ffff dbfa ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c7 ffff dbfb ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7cc ffff dbfe ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d18c ffff e7c3 ffff d18c ffff  ................\n00000010: e7c3                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 9f3b fffe 7960 fffe  ....y`...;..y`..\n00000010: 9f3b                                     .;\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff c898 ffff e7d6 ffff c898 ffff  ................\n00000010: e7d6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c9 ffff dbfe ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c9 ffff dbff ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c4 ffff dbff ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c8 ffff dc01 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c8 ffff dc02 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7ca ffff dc03 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7cc ffff dc01 ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c6 ffff dbfd ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c7 ffff dbfc ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7cb ffff dbfe ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c4 ffff dbfd ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c7 ffff dc00 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7c9 ffff dc03 ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7ce ffff dc02 ffff  ................\n00000010: e7ce                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c6 ffff dc01 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7ca ffff dc02 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d2a6 ffff e7c7 ffff d2a6 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe b6c0 fffe 7960 fffe  ....y`......y`..\n00000010: b6c0                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff c667 ffff e7ca ffff c667 ffff  .....g.......g..\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c8 ffff dc01 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7cb ffff dc02 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c7 ffff dbfc ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c6 ffff dbfb ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c7 ffff dbfa ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c5 ffff dbf9 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c6 ffff dbfc ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c6 ffff dbfe ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7cc ffff dc03 ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7cc ffff dc02 ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7ca ffff dc03 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c5 ffff dc00 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c7 ffff dc00 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c9 ffff dbfd ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c8 ffff dbfb ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c5 ffff dbf9 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c5 ffff dbfa ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c5 ffff dbfb ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c6 ffff dbfd ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d3e5 ffff e7cb ffff d3e5 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 92fb fffe ce45 fffe 92fb fffe  .........E......\n00000010: ce45                                     .E\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff c3b6 ffff e7d3 ffff c3b6 ffff  ................\n00000010: e7d3                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7d0 ffff dbfd ffff  ................\n00000010: e7d0                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c8 ffff dc00 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c9 ffff dbff ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c5 ffff dc01 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c5 ffff dc01 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7cb ffff dc01 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c5 ffff dc00 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c8 ffff dc00 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c8 ffff dbfe ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7cb ffff dbfd ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c7 ffff dbfb ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7cc ffff dbfc ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c6 ffff dbfb ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c4 ffff dbfe ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7ca ffff dc03 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7ca ffff dc03 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c7 ffff dc02 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c6 ffff dc01 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c7 ffff dbfe ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d4dc ffff e7c6 ffff d4dc ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 9e44 fffe ed5b fffe 9e44 fffe  .....D...[...D..\n00000010: ed5b                                     .[\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff c0bc ffff e7cf ffff c0bc ffff  ................\n00000010: e7cf                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7ce ffff dc00 ffff  ................\n00000010: e7ce                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c6 ffff dbfe ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c6 ffff dbfc ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7cb ffff dbfb ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7cc ffff dbfb ffff  ................\n00000010: e7cc                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c7 ffff dbfc ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c7 ffff dbfe ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7ca ffff dc02 ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c4 ffff dc00 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c4 ffff dc01 ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c8 ffff dc01 ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7cb ffff dc00 ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7ca ffff dbfe ffff  ................\n00000010: e7ca                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfb ffff e7c8 ffff dbfb ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7cb ffff dbfd ffff  ................\n00000010: e7cb                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c6 ffff dbfa ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfc ffff e7c8 ffff dbfc ffff  ................\n00000010: e7c8                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c7 ffff dbfd ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d5f3 ffff e7c9 ffff d5f3 ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe c482 fffe 7960 fffe  ....y`......y`..\n00000010: c482                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff bcbe ffff e7d6 ffff bcbe ffff  ................\n00000010: e7d6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7cf ffff dbfa ffff  ................\n00000010: e7cf                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c5 ffff dbfe ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c6 ffff dc00 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c5 ffff dc02 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc02 ffff e7c5 ffff dc02 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc04 ffff e7cd ffff dc04 ffff  ................\n00000010: e7cd                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc00 ffff e7c9 ffff dc00 ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfe ffff e7c9 ffff dbfe ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c5 ffff dbfa ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf8 ffff e7c2 ffff dbf8 ffff  ................\n00000010: e7c2                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbf9 ffff e7c3 ffff dbf9 ffff  ................\n00000010: e7c3                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfa ffff e7c4 ffff dbfa ffff  ................\n00000010: e7c4                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbfd ffff e7c5 ffff dbfd ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c7 ffff dbff ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc04 ffff e7c7 ffff dc04 ffff  ................\n00000010: e7c7                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7c5 ffff dc03 ffff  ................\n00000010: e7c5                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc03 ffff e7c6 ffff dc03 ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dc01 ffff e7c9 ffff dc01 ffff  ................\n00000010: e7c9                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff dbff ffff e7c6 ffff dbff ffff  ................\n00000010: e7c6                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 ffff d6d4 ffff e7cd ffff d6d4 ffff  ................\n00000010: e7cd                                     ..\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 9f3b fffe 7960 fffe  ....y`...;..y`..\n00000010: 9f3b                                     .;\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"
+"audio"
+1
+"18"
+"\n00000000: 0201 fffe 7960 fffe 7960 fffe 7960 fffe  ....y`..y`..y`..\n00000010: 7960                                     y`\n"

@@ -26,6 +26,7 @@
 #include "avi.h"
 #include "avio_internal.h"
 #include "riff.h"
+#include "aac.h"
 #include "mpegts.h"
 #include "libavformat/avlanguage.h"
 #include "libavutil/avstring.h"
@@ -67,6 +68,7 @@ typedef struct AVIContext {
     int64_t frames_hdr_all;
     int riff_id;
     int write_channel_mask;
+    int calculate_expected_file_size;       /* Update AVFormatContext::expected_file_size */
 } AVIContext;
 
 typedef struct AVIStream {
@@ -355,8 +357,8 @@ static int avi_write_header(AVFormatContext *s)
         if (   par->codec_type == AVMEDIA_TYPE_VIDEO
             && par->codec_id != AV_CODEC_ID_XSUB
             && au_byterate > 1000LL*au_scale) {
-            au_byterate = 600;
-            au_scale    = 1;
+	        au_byterate = st->avg_frame_rate.num;
+		au_scale    = st->avg_frame_rate.den; 
         }
         avpriv_set_pts_info(st, 64, au_scale, au_byterate);
         if (par->codec_id == AV_CODEC_ID_XSUB)
@@ -587,7 +589,8 @@ static int avi_write_ix(AVFormatContext *s)
         int64_t ix;
 
         avi_stream2fourcc(tag, i, s->streams[i]->codecpar->codec_type);
-        ix_tag[3] = '0' + i;
+        ix_tag[2] = '0' + i / 10;
+        ix_tag[3] = '0' + i % 10;
 
         /* Writing AVI OpenDML leaf index chunk */
         ix = avio_tell(pb);
@@ -700,16 +703,88 @@ static int avi_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     const int stream_index = pkt->stream_index;
     AVCodecParameters *par = s->streams[stream_index]->codecpar;
+    int size               = pkt->size;
+    AVIStream *avist       = s->streams[stream_index]->priv_data;
+    int64_t dts_norm       = pkt->duration ? (pkt->dts / pkt->duration) : pkt->dts;
     int ret;
 
-    if (par->codec_id == AV_CODEC_ID_H264 && par->codec_tag == MKTAG('H','2','6','4') && pkt->size) {
+    if (par->codec_id == AV_CODEC_ID_H264 && par->codec_tag == MKTAG('H','2','6','4') && pkt->size) 
+    {
         ret = ff_check_h264_startcode(s, s->streams[stream_index], pkt);
         if (ret < 0)
             return ret;
     }
 
-    if ((ret = write_skip_frames(s, stream_index, pkt->dts)) < 0)
-        return ret;
+    if(pkt->dts != AV_NOPTS_VALUE && dts_norm > avist->packet_count && par->codec_id != AV_CODEC_ID_XSUB)
+    {
+        AVPacket empty_packet;
+        static const uint8_t
+            AAC_SILENCE_MONO[]   = {0x00, 0xc8, 0x00, 0x80, 0x23, 0x80};
+        static const uint8_t
+            AAC_SILENCE_STEREO[] = {0x21, 0x00, 0x49, 0x90, 0x02, 0x19, 0x00, 0x23, 0x80};
+
+        
+        if(dts_norm - avist->packet_count > 60000)
+        {
+            av_log(s, AV_LOG_ERROR, "Too large number of skipped frames %"PRId64" > 60000\n", dts_norm - avist->packet_count);
+            return AVERROR(EINVAL);
+        }
+
+        switch(par->codec_id) 
+        {
+            case AV_CODEC_ID_MP3:
+                //Generate 144 bte lenght packet filled with 0xFF values
+                av_new_packet(&empty_packet,144);
+                //Generate MPEG header
+                empty_packet.data[0] = 0xFF;
+                empty_packet.data[1] = 0xFB;
+                empty_packet.data[2] = 0x18;
+                empty_packet.data[3] = 0x64;
+                memset(empty_packet.data + 4, 0xFF, empty_packet.size - 4);
+                break;
+            case AV_CODEC_ID_AAC:
+                // DTS is measured in 1024 samples block
+                if(par->channels == 1) {
+                    av_new_packet(&empty_packet,sizeof(AAC_SILENCE_MONO));
+                    memcpy(empty_packet.data,AAC_SILENCE_MONO,empty_packet.size);
+                }
+                else {
+                    av_new_packet(&empty_packet,sizeof(AAC_SILENCE_STEREO));
+                    memcpy(empty_packet.data,AAC_SILENCE_STEREO,empty_packet.size);
+                }
+                break;
+            default:
+                // PCM codecs
+                if(par->codec_type != AVMEDIA_TYPE_VIDEO)
+                {
+                    if(par->block_align && par->frame_size > 0) {
+                        av_new_packet(&empty_packet,par->block_align*par->frame_size);
+                        memset(empty_packet.data,0,empty_packet.size);
+                    }
+                    else {
+                        av_new_packet(&empty_packet, size);
+                        memset(empty_packet.data, 0, empty_packet.size);
+                    }
+                }
+                else
+                {
+                    av_init_packet(&empty_packet);
+                    empty_packet.size         = 0;
+                    empty_packet.data         = NULL;
+                    empty_packet.stream_index = stream_index;
+                }
+        }
+        empty_packet.stream_index= stream_index;
+        empty_packet.duration = pkt->duration;
+        while(dts_norm > avist->packet_count) {
+            avi_write_packet_internal(s, &empty_packet);
+            av_dlog(s, "dup dts:%s packet_count:%d\n", av_ts2str(pkt->dts), avist->packet_count);
+        }
+        av_packet_unref(&empty_packet);
+    }
+    else
+        if ((ret = write_skip_frames(s, stream_index, pkt->dts)) < 0)
+            return ret;
 
     if (!pkt->size)
         return avi_write_packet_internal(s, pkt); /* Passthrough */
@@ -802,6 +877,8 @@ static int avi_write_packet_internal(AVFormatContext *s, AVPacket *pkt)
     AVIStream *avist    = s->streams[stream_index]->priv_data;
     AVCodecParameters *par = s->streams[stream_index]->codecpar;
 
+    int header_size = 0;
+
     if (pkt->dts != AV_NOPTS_VALUE)
         avist->last_dts = pkt->dts + pkt->duration;
 
@@ -832,12 +909,34 @@ static int avi_write_packet_internal(AVFormatContext *s, AVPacket *pkt)
         if (ret < 0)
             return ret;
     }
+    // Remove AAC ADTS header (for WMP). Only for real files
+    if ( par->codec_id == AV_CODEC_ID_AAC ) {
+        header_size = ff_aac_get_adts_header_size (pkt->data, size);
+        size -= header_size;
+    }
 
     avio_write(pb, tag, 4);
     avio_wl32(pb, size);
-    avio_write(pb, pkt->data, size);
+    //avio_write(pb, pkt->data, size);
+    avio_write(pb, pkt->data+header_size, size);
     if (size & 1)
         avio_w8(pb, 0);
+
+    if (s->pb->seekable && avi->calculate_expected_file_size) {
+        s->expected_file_size = avio_tell(pb);
+        if  (s->expected_file_size > 0) {
+            int i;
+            int extra_size = avi->riff_id == 1?0:24;
+            for (i=0;i<s->nb_streams;i++) {
+                AVIStream *avist= s->streams[i]->priv_data;
+                s->expected_file_size += (avist->indexes.entry * 16 + extra_size);
+            }
+            s->expected_file_size += 8;
+        }
+        else {
+            s->expected_file_size = 0;
+        }
+    }
 
     return 0;
 }
@@ -908,7 +1007,8 @@ static int avi_write_trailer(AVFormatContext *s)
 #define OFFSET(x) offsetof(AVIContext, x)
 #define ENC AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
-    { "write_channel_mask", "write channel mask into wave format header", OFFSET(write_channel_mask), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, ENC },
+    { "write_channel_mask",           "write channel mask into wave format header", OFFSET(write_channel_mask),           AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, ENC },
+    { "calculate_expected_file_size", "Calculate expected_file_size",               OFFSET(calculate_expected_file_size), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, ENC },    
     { NULL },
 };
 

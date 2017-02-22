@@ -145,8 +145,9 @@ void av_register_all(void)
     REGISTER_MUXDEMUX(H261,             h261);
     REGISTER_MUXDEMUX(H263,             h263);
     REGISTER_MUXDEMUX(H264,             h264);
-    REGISTER_MUXER   (HASH,             hash);
+    REGISTER_MUXER   (HASH,             hash);    
     REGISTER_MUXER   (HDS,              hds);
+    REGISTER_MUXER   (JPEG,             jpeg);
     REGISTER_MUXDEMUX(HEVC,             hevc);
     REGISTER_MUXDEMUX(HLS,              hls);
     REGISTER_DEMUXER (HNM,              hnm);
@@ -258,6 +259,7 @@ void av_register_all(void)
     REGISTER_DEMUXER (QCP,              qcp);
     REGISTER_DEMUXER (R3D,              r3d);
     REGISTER_MUXDEMUX(RAWVIDEO,         rawvideo);
+    REGISTER_MUXDEMUX(RAWPACKET,        rawpacket);
     REGISTER_DEMUXER (REALTEXT,         realtext);
     REGISTER_DEMUXER (REDSPARK,         redspark);
     REGISTER_DEMUXER (RL2,              rl2);
@@ -267,7 +269,8 @@ void av_register_all(void)
     REGISTER_DEMUXER (RSD,              rsd);
     REGISTER_MUXDEMUX(RSO,              rso);
     REGISTER_MUXDEMUX(RTP,              rtp);
-    REGISTER_MUXER   (RTP_MPEGTS,       rtp_mpegts);
+    REGISTER_MUXER   (RTP_MPEGTS,       rtp_mpegts);    
+    REGISTER_MUXER   (RTP_MPEGTS_EPIPHAN,       rtp_mpegts_epiphan);
     REGISTER_MUXDEMUX(RTSP,             rtsp);
     REGISTER_DEMUXER (SAMI,             sami);
     REGISTER_MUXDEMUX(SAP,              sap);

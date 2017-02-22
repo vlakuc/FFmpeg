@@ -1918,9 +1918,13 @@ int attribute_align_arg avcodec_encode_audio2(AVCodecContext *avctx,
             avpkt->buf      = user_pkt.buf;
             avpkt->data     = user_pkt.data;
         } else {
+
+// Epiphan: Temporarily disable deprecation warnings for an old API
+FF_DISABLE_DEPRECATION_WARNINGS
             if (av_dup_packet(avpkt) < 0) {
                 ret = AVERROR(ENOMEM);
             }
+FF_ENABLE_DEPRECATION_WARNINGS
         }
     }
 
@@ -2014,9 +2018,12 @@ int attribute_align_arg avcodec_encode_video2(AVCodecContext *avctx,
             avpkt->buf      = user_pkt.buf;
             avpkt->data     = user_pkt.data;
         } else {
+// Epiphan: Temporarily disable deprecation warnings for an old API
+FF_DISABLE_DEPRECATION_WARNINGS            
             if (av_dup_packet(avpkt) < 0) {
                 ret = AVERROR(ENOMEM);
             }
+FF_ENABLE_DEPRECATION_WARNINGS            
         }
     }
 
@@ -2091,14 +2098,14 @@ static int64_t guess_correct_pts(AVCodecContext *ctx,
     return pts;
 }
 
-static int apply_param_change(AVCodecContext *avctx, AVPacket *avpkt)
+static int apply_param_change(AVCodecContext *avctx, const AVPacket *avpkt)
 {
     int size = 0, ret;
     const uint8_t *data;
     uint32_t flags;
     int64_t val;
 
-    data = av_packet_get_side_data(avpkt, AV_PKT_DATA_PARAM_CHANGE, &size);
+    data = av_packet_get_side_data((AVPacket*)avpkt, AV_PKT_DATA_PARAM_CHANGE, &size);
     if (!data)
         return 0;
 
@@ -2240,7 +2247,7 @@ int attribute_align_arg avcodec_decode_video2(AVCodecContext *avctx, AVFrame *pi
     if ((avctx->coded_width || avctx->coded_height) && av_image_check_size(avctx->coded_width, avctx->coded_height, 0, avctx))
         return AVERROR(EINVAL);
 
-    avctx->internal->pkt = avpkt;
+    avctx->internal->pkt = (AVPacket*)avpkt;
     ret = apply_param_change(avctx, avpkt);
     if (ret < 0)
         return ret;

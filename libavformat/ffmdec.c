@@ -450,6 +450,7 @@ static int ffm2_read_header(AVFormatContext *s)
             codec->qblur = av_int2double(avio_rb64(pb));
             codec->max_qdiff = avio_rb32(pb);
             codec->refs = avio_rb32(pb);
+            codec->ticks_per_frame = avio_rb32(pb);
             break;
         case MKBETAG('S', 'T', 'A', 'U'):
             if (f_stau++ || codec->codec_type != AVMEDIA_TYPE_AUDIO) {

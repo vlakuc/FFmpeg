@@ -470,6 +470,7 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC (WMAV2,             wmav2);
     REGISTER_DECODER(WMAVOICE,          wmavoice);
     REGISTER_DECODER(WS_SND1,           ws_snd1);
+    REGISTER_ENCODER(AUDIO_LEVEL,       audio_level);
     REGISTER_DECODER(XMA1,              xma1);
     REGISTER_DECODER(XMA2,              xma2);
 
@@ -597,6 +598,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER(QDMC_AT,           qdmc_at);
     REGISTER_DECODER(QDM2_AT,           qdm2_at);
     REGISTER_DECODER(LIBCELT,           libcelt);
+    REGISTER_ENCODER(LIBFAAC,           libfaac);
     REGISTER_ENCDEC (LIBFDK_AAC,        libfdk_aac);
     REGISTER_ENCDEC (LIBGSM,            libgsm);
     REGISTER_ENCDEC (LIBGSM_MS,         libgsm_ms);
@@ -704,4 +706,9 @@ void avcodec_register_all(void)
     REGISTER_PARSER(VP3,                vp3);
     REGISTER_PARSER(VP8,                vp8);
     REGISTER_PARSER(VP9,                vp9);
+
+    /* daVinci virtual encoders */
+    REGISTER_ENCODER (FAKE_LIBX264, fake_libx264);
+    REGISTER_ENCODER (FAKE_LIBMP3LAME, fake_libmp3lame);
+    REGISTER_ENCODER (FAKE_LIBFAAC, fake_libfaac);
 }

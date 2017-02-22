@@ -23,6 +23,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include "attributes.h"
 
 /**
@@ -130,6 +131,20 @@ size_t av_strlcat(char *dst, const char *src, size_t size);
  *  if enough space had been available
  */
 size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...) av_printf_format(3, 4);
+
+/**
+ * Append output to a string, according to a format. Never write out of
+ * the destination buffer, and and always put a terminating 0 within
+ * the buffer.
+ * @param dst destination buffer (string to which the output is
+ *  appended)
+ * @param size total size of the destination buffer
+ * @param fmt printf-compatible format string, specifying how the
+ *  following parameters are used
+ * @return the length of the string that would have been generated
+ *  if enough space had been available
+ */
+size_t av_vstrlcatf(char *dst, size_t size, const char *fmt, va_list args);
 
 /**
  * Get the count of continuous non zero chars starting from the beginning.

@@ -32,6 +32,9 @@
 #include "internal.h"
 #include "img2.h"
 
+// Epiphan: for  FF_DISABLE_DEPRECATION_WARNINGS/FF_ENABLE_DEPRECATION_WARNINGS
+#include "libavutil/internal.h"
+
 typedef struct VideoMuxData {
     const AVClass *class;  /**< Class for private options. */
     int img_number;
@@ -159,6 +162,8 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
         st->id = pkt->stream_index;
 
         fmt->pb = pb[0];
+// Epiphan: Temporarily disable deprecation warning (av_dup_packet)
+FF_DISABLE_DEPRECATION_WARNINGS        
         if ((ret = av_copy_packet(&pkt2, pkt))                            < 0 ||
             (ret = av_dup_packet(&pkt2))                                  < 0 ||
             (ret = avcodec_parameters_copy(st->codecpar, s->streams[0]->codecpar)) < 0 ||
@@ -169,6 +174,9 @@ static int write_packet(AVFormatContext *s, AVPacket *pkt)
             avformat_free_context(fmt);
             return ret;
         }
+// Epiphan: Temporarily disable deprecation warning (av_dup_packet)
+FF_ENABLE_DEPRECATION_WARNINGS   
+
         av_packet_unref(&pkt2);
         avformat_free_context(fmt);
     } else {

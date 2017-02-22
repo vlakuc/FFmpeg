@@ -31,6 +31,7 @@
  */
 
 #include "v4l2-common.h"
+#include "libavformat/network.h"
 #include <dirent.h>
 
 #if CONFIG_LIBV4L2
@@ -65,6 +66,11 @@ static const int desired_video_buffers = 256;
  */
 #define V4L_TS_CONVERT_READY V4L_TS_DEFAULT
 
+ /** 
+ * Ignore device timestamps
+ */
+#define V4L_TS_IGNORE   3
+
 struct video_data {
     AVClass *class;
     int fd;
@@ -88,6 +94,8 @@ struct video_data {
     int list_format;    /**< Set by a private option. */
     int list_standard;  /**< Set by a private option. */
     char *framerate;    /**< Set by a private option. */
+
+    int read_timeout;   /* Read frame timeout         */
 
     int use_libv4l2;
     int (*open_f)(const char *file, int oflag, ...);
@@ -483,6 +491,30 @@ static int convert_timestamp(AVFormatContext *ctx, int64_t *ts)
     return 0;
 }
 
+static int v4l2_poll_interrupt(struct pollfd *p, nfds_t nfds, int timeout,
+                               AVIOInterruptCB *cb)
+{
+    int runs = timeout / POLLING_TIME;
+    int ret = 0;
+    do {
+        if (cb && cb->callback && (ret = cb->callback(cb->opaque))) {
+            return AVERROR_EXIT;
+        }
+        ret = poll(p, nfds, POLLING_TIME);
+        if (ret != 0) {
+            break;
+        }
+    } while (timeout <= 0 || runs-- > 0);
+
+    if (!ret) {
+        return AVERROR(ETIMEDOUT);
+    }
+    if (ret < 0)
+        return AVERROR(errno);
+    return ret;
+}
+
+
 static int mmap_read_frame(AVFormatContext *ctx, AVPacket *pkt)
 {
     struct video_data *s = ctx->priv_data;
@@ -494,6 +526,19 @@ static int mmap_read_frame(AVFormatContext *ctx, AVPacket *pkt)
 
     pkt->size = 0;
 
+    if (s->read_timeout > 0)
+    {
+        const int timeout = s->read_timeout;
+        struct pollfd lp = { s->fd, POLLIN, 0 };
+        res = v4l2_poll_interrupt(&lp, 1, timeout, &ctx->interrupt_callback);
+        if (res < 0) {
+            if (res == AVERROR(ETIMEDOUT))
+                av_log(ctx, AV_LOG_WARNING, "read frame timeout\n");
+            else
+                av_log(ctx, AV_LOG_ERROR, "read frame poll error: %s\n", av_err2str(res));
+            return res;
+        }
+    }
     /* FIXME: Some special treatment might be needed in case of loss of signal... */
     while ((res = v4l2_ioctl(s->fd, VIDIOC_DQBUF, &buf)) < 0 && (errno == EINTR));
     if (res < 0) {
@@ -581,8 +626,21 @@ static int mmap_read_frame(AVFormatContext *ctx, AVPacket *pkt)
             return AVERROR(ENOMEM);
         }
     }
-    pkt->pts = buf.timestamp.tv_sec * INT64_C(1000000) + buf.timestamp.tv_usec;
-    convert_timestamp(ctx, &pkt->pts);
+
+    if (s->ts_mode == V4L_TS_IGNORE) {
+        pkt->pts = av_gettime();
+    }
+    else {
+        pkt->pts = buf.timestamp.tv_sec * INT64_C(1000000) + buf.timestamp.tv_usec;
+        convert_timestamp(ctx, &pkt->pts);
+    }
+    
+    // TODO: remove me / put under condition
+    {
+        int64_t now;
+        now = av_gettime();
+        av_log(ctx, AV_LOG_DEBUG, "v4l2_pts: %"PRId64" current_time: %"PRId64"\n", pkt->pts, now);
+    }
 
     return pkt->size;
 }
@@ -1104,12 +1162,15 @@ static const AVOption options[] = {
     { "list_standards", "list supported standards and exit",                      OFFSET(list_standard), AV_OPT_TYPE_INT,   {.i64 = 0 },  0, 1, DEC, "list_standards" },
     { "all",            "show all supported standards",                           OFFSET(list_standard), AV_OPT_TYPE_CONST, {.i64 = 1 },  0, 0, DEC, "list_standards" },
 
-    { "timestamps",   "set type of timestamps for grabbed frames",                OFFSET(ts_mode),      AV_OPT_TYPE_INT,    {.i64 = 0 }, 0, 2, DEC, "timestamps" },
-    { "ts",           "set type of timestamps for grabbed frames",                OFFSET(ts_mode),      AV_OPT_TYPE_INT,    {.i64 = 0 }, 0, 2, DEC, "timestamps" },
-    { "default",      "use timestamps from the kernel",                           OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_DEFAULT  }, 0, 2, DEC, "timestamps" },
-    { "abs",          "use absolute timestamps (wall clock)",                     OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_ABS      }, 0, 2, DEC, "timestamps" },
-    { "mono2abs",     "force conversion from monotonic to absolute timestamps",   OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_MONO2ABS }, 0, 2, DEC, "timestamps" },
+    { "timestamps",   "set type of timestamps for grabbed frames",                OFFSET(ts_mode),      AV_OPT_TYPE_INT,    {.i64 = 0 }, 0, 3, DEC, "timestamps" },
+    { "ts",           "set type of timestamps for grabbed frames",                OFFSET(ts_mode),      AV_OPT_TYPE_INT,    {.i64 = 0 }, 0, 3, DEC, "timestamps" },
+    { "default",      "use timestamps from the kernel",                           OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_DEFAULT  }, 0, 3, DEC, "timestamps" },
+    { "abs",          "use absolute timestamps (wall clock)",                     OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_ABS      }, 0, 3, DEC, "timestamps" },
+    { "mono2abs",     "force conversion from monotonic to absolute timestamps",   OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_MONO2ABS }, 0, 3, DEC, "timestamps" },
+    { "ignore",       "ignore device timestamps",                                 OFFSET(ts_mode),      AV_OPT_TYPE_CONST,  {.i64 = V4L_TS_IGNORE   }, 0, 3, DEC, "timestamps" },
     { "use_libv4l2",  "use libv4l2 (v4l-utils) conversion functions",             OFFSET(use_libv4l2),  AV_OPT_TYPE_BOOL,   {.i64 = 0}, 0, 1, DEC },
+
+    { "read_timeout", "read frame timeout",                                       OFFSET(read_timeout),  AV_OPT_TYPE_INT,   {.i64 = 0},  0, INT_MAX, DEC},
     { NULL },
 };
 

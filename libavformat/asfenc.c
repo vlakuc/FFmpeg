@@ -253,6 +253,7 @@ typedef struct ASFContext {
 } ASFContext;
 
 static const AVCodecTag codec_asf_bmp_tags[] = {
+    { AV_CODEC_ID_MPEG4,     MKTAG('D', 'I', 'V', 'X') }, // VVA FIX: needed for WMP to decode ISO MPEG-4
     { AV_CODEC_ID_MPEG4,     MKTAG('M', '4', 'S', '2') },
     { AV_CODEC_ID_MPEG4,     MKTAG('M', 'P', '4', 'S') },
     { AV_CODEC_ID_MSMPEG4V3, MKTAG('M', 'P', '4', '3') },
@@ -659,6 +660,14 @@ static int asf_write_header1(AVFormatContext *s, int64_t file_size,
 
             if (wavsize < 0)
                 return -1;
+            if ((par->codec_id != AV_CODEC_ID_MP3) && 
+                (par->codec_id != AV_CODEC_ID_MP2) && 
+                (par->codec_id != AV_CODEC_ID_AAC) && 
+                (par->codec_id != AV_CODEC_ID_ADPCM_IMA_WAV) && 
+                (par->extradata_size==0)) {
+                wavsize += 2;
+                avio_wl16(pb, 0);
+            }
             if (wavsize != extra_size) {
                 cur_pos = avio_tell(pb);
                 avio_seek(pb, es_pos, SEEK_SET);
@@ -962,6 +971,11 @@ static void put_frame(AVFormatContext *s, ASFStream *stream, AVStream *avst,
                         PAYLOAD_HEADER_SIZE_MULTIPLE_PAYLOADS -
                         PACKET_HEADER_MIN_SIZE - 1;
 
+            // Always flush previous packet if new one is earlier 
+            if (timestamp < asf->packet_timestamp_start) {
+                flush_packet(s);
+                continue;
+            }
             if (frag_len1 < payload_len &&
                 avst->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
                 flush_packet(s);
@@ -1066,6 +1080,11 @@ static int asf_write_packet(AVFormatContext *s, AVPacket *pkt)
 
     if (par->codec_type == AVMEDIA_TYPE_AUDIO)
         flags &= ~AV_PKT_FLAG_KEY;
+
+    // Skip everythinguntil teh firstkey farme
+    if(asf->nb_packets == 0 && !(par->codec_type == AVMEDIA_TYPE_VIDEO && (flags & AV_PKT_FLAG_KEY))) {
+        return 0;
+    }
 
     pts = (pkt->pts != AV_NOPTS_VALUE) ? pkt->pts : pkt->dts;
     av_assert0(pts != AV_NOPTS_VALUE);

@@ -81,6 +81,10 @@ typedef struct MOVFragmentInfo {
 typedef struct MOVTrack {
     int         mode;
     int         entry;
+    int         entry_offset;
+    int         entry_frame_offset;
+    uint8_t     not_equal_chunks;
+    uint8_t     is_stss_writed;
     unsigned    timescale;
     uint64_t    time;
     int64_t     track_duration;
@@ -197,6 +201,15 @@ typedef struct MOVMuxContext {
     int reserved_moov_size; ///< 0 for disabled, -1 for automatic, size otherwise
     int64_t reserved_header_pos;
 
+    int64_t mvhd_duration_pos; //Fo duration_update
+    uint8_t mvhd_version;
+    int64_t mehd_duration_pos; //Fo duration_update
+    uint8_t mehd_version;
+
+    int64_t empty_moov_pos; //Saving empty moov position for build_moov opt
+    int64_t cur_moof_pos; //For saving offset position for build_moov opt
+    int64_t cur_moov_size; //Current moov atom size for build_moov opt
+
     char *major_brand;
 
     int per_stream_grouping;
@@ -220,6 +233,11 @@ typedef struct MOVMuxContext {
     int use_stream_ids_as_track_ids;
     int track_ids_ok;
     int write_tmcd;
+
+    // Update AVFormatContext::expected_file_size. 
+    //  CAUTION: significantly degrades performance on big non-fragmented files
+    int calculate_expected_file_size;
+
 } MOVMuxContext;
 
 #define FF_MOV_FLAG_RTP_HINT              (1 <<  0)
@@ -239,7 +257,9 @@ typedef struct MOVMuxContext {
 #define FF_MOV_FLAG_GLOBAL_SIDX           (1 << 14)
 #define FF_MOV_FLAG_WRITE_COLR            (1 << 15)
 #define FF_MOV_FLAG_WRITE_GAMA            (1 << 16)
-#define FF_MOV_FLAG_USE_MDTA              (1 << 17)
+#define FF_MOV_FLAG_DURATION_UPDATE       (1 << 17)
+#define FF_MOV_FLAG_FRAG_BUILD_MOOV       (1 << 18)
+#define FF_MOV_FLAG_USE_MDTA              (1 << 19)
 
 int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt);
 

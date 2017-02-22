@@ -265,13 +265,18 @@ int ff_listen_connect(int fd, const struct sockaddr *addr,
                 char errbuf[100];
                 ret = AVERROR(ret);
                 av_strerror(ret, errbuf, sizeof(errbuf));
-                if (will_try_next)
+                if (will_try_next) {
                     av_log(h, AV_LOG_WARNING,
                            "Connection to %s failed (%s), trying next address\n",
                            h->filename, errbuf);
-                else
-                    av_log(h, AV_LOG_ERROR, "Connection to %s failed: %s\n",
+                } else {
+                    int log_level = AV_LOG_ERROR;
+                    if (ret == AVERROR(ECONNREFUSED))
+                        log_level = AV_LOG_DEBUG;
+                    
+                    av_log(h, log_level, "Connection to %s failed: %s\n",
                            h->filename, errbuf);
+                }
             }
         default:
             return ret;

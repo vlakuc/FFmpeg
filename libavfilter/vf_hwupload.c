@@ -81,10 +81,14 @@ static int hwupload_query_formats(AVFilterContext *avctx)
         }
     }
 
-    ff_formats_ref(input_formats, &avctx->inputs[0]->out_formats);
+    err = ff_formats_ref(input_formats, &avctx->inputs[0]->out_formats);
+    if (err < 0)
+        goto fail;
 
-    ff_formats_ref(ff_make_format_list(output_pix_fmts),
+    err = ff_formats_ref(ff_make_format_list(output_pix_fmts),
                    &avctx->outputs[0]->in_formats);
+    if (err < 0)
+        goto fail;
 
     av_hwframe_constraints_free(&constraints);
     return 0;

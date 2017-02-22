@@ -58,6 +58,7 @@ typedef struct AlsaData {
     void *reorder_buf;
     int reorder_buf_size; ///< in frames
     int64_t timestamp; ///< current timestamp, without latency applied.
+    int npackets;
 } AlsaData;
 
 /**
@@ -78,6 +79,11 @@ av_warn_unused_result
 int ff_alsa_open(AVFormatContext *s, snd_pcm_stream_t mode,
                  unsigned int *sample_rate,
                  int channels, enum AVCodecID *codec_id);
+
+av_warn_unused_result
+int ff_alsa_open2(AVFormatContext *s, snd_pcm_stream_t mode,
+                 unsigned int *sample_rate,
+                 int *channels, enum AVCodecID *codec_id);
 
 /**
  * Close the ALSA PCM.

@@ -26,6 +26,7 @@ int ff_framehash_write_header(AVFormatContext *s)
 
     if (s->nb_streams && !(s->flags & AVFMT_FLAG_BITEXACT))
         avio_printf(s->pb, "#software: %s\n", LIBAVFORMAT_IDENT);
+
     for (i = 0; i < s->nb_streams; i++) {
         AVStream *st = s->streams[i];
         AVCodecParameters *avctx = st->codecpar;

@@ -222,7 +222,7 @@ void ff_vaapi_common_end_frame(AVCodecContext *avctx)
     vactx->slice_params_alloc  = 0;
 }
 
-#if CONFIG_H263_VAAPI_HWACCEL  || CONFIG_MPEG1_VAAPI_HWACCEL || \
+#if CONFIG_H263_VAAPI_HWACCEL  ||                               \
     CONFIG_MPEG2_VAAPI_HWACCEL || CONFIG_MPEG4_VAAPI_HWACCEL || \
     CONFIG_VC1_VAAPI_HWACCEL   || CONFIG_WMV3_VAAPI_HWACCEL
 int ff_vaapi_mpeg_end_frame(AVCodecContext *avctx)

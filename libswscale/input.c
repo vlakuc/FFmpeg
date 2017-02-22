@@ -926,6 +926,7 @@ static void planar_rgb##nbits##endian_name##_to_y(uint8_t *dst, const uint8_t *s
 {                                                                                                   \
     planar_rgb16_to_y(dst, src, w, nbits, endian, rgb2yuv);                                         \
 }                                                                                                   \
+av_unused                                                                                           \
 static void planar_rgb##nbits##endian_name##_to_a(uint8_t *dst, const uint8_t *src[4],              \
                                                   int w, int32_t *rgb2yuv)                          \
 {                                                                                                   \

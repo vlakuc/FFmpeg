@@ -838,6 +838,43 @@ static int get_free_frame(QSVEncContext *q, QSVFrame **f)
     return 0;
 }
 
+// TODO:
+//  Temporarily support YUV420
+//  REMOVE ME AFTER UPDATE pipeline
+static inline void copy_plane(const uint8_t *src, uint8_t *dst, int count, int len, int src_pitch, int dst_pitch)
+{
+    int i;
+    if(src_pitch == dst_pitch) {
+        memcpy(dst,src,src_pitch*count);
+    }
+    else {
+        for(i = 0; i < count; i++) {
+            memcpy(dst,src,len);
+            src+=src_pitch;
+            dst+=dst_pitch;
+        }
+    }
+}
+
+// TODO:
+//  Temporarily support YUV420
+//  REMOVE ME AFTER UPDATE pipeline
+static inline void convert_color_plane(const uint8_t *u, const uint8_t *v, uint8_t *dst, int count, int len, int u_pitch, int v_pitch, int dst_pitch)
+{
+    int i;
+    for(i = 0; i < count; i++) {
+        int j;
+        uint8_t *p = dst;
+        for(j = 0; j < len; j++) {
+            *p++ = *u++;
+            *p++ = *v++;
+        }
+        u+=(u_pitch-len);
+        v+=(v_pitch-len);
+        dst+=dst_pitch;
+    }
+ }
+
 static int submit_frame(QSVEncContext *q, const AVFrame *frame,
                         QSVFrame **new_frame)
 {
@@ -855,8 +892,27 @@ static int submit_frame(QSVEncContext *q, const AVFrame *frame,
 
         qf->surface = (mfxFrameSurface1*)qf->frame->data[3];
     } else {
+        // TODO:
+        //  Temporarily support YUV420
+        //  REMOVE ME AFTER UPDATE pipeline
+        if ( frame->format == AV_PIX_FMT_YUV420P )
+        {
+            int original_pix_fmt = q->avctx->pix_fmt;
+            q->avctx->pix_fmt = AV_PIX_FMT_NV12;
+            qf->frame->height = FFALIGN(frame->height, q->height_align);
+            qf->frame->width  = FFALIGN(frame->width, q->width_align);
+            ret = ff_get_buffer(q->avctx, qf->frame, AV_GET_BUFFER_FLAG_REF);
+            q->avctx->pix_fmt = original_pix_fmt;
+            if (ret < 0)
+                return ret;
+
+            qf->frame->height = frame->height;
+            qf->frame->width  = frame->width;
+            copy_plane(frame->data[0], qf->frame->data[0], frame->height, frame->width, frame->linesize[0], qf->frame->linesize[0]);
+            convert_color_plane(frame->data[1], frame->data[2], qf->frame->data[1], frame->height/2, frame->width/2, frame->linesize[1], frame->linesize[2], qf->frame->linesize[1]);
+        }
         /* make a copy if the input is not padded as libmfx requires */
-        if (     frame->height & (q->height_align - 1) ||
+        else if (     frame->height & (q->height_align - 1) ||
             frame->linesize[0] & (q->width_align - 1)) {
             qf->frame->height = FFALIGN(frame->height, q->height_align);
             qf->frame->width  = FFALIGN(frame->width, q->width_align);
@@ -977,6 +1033,7 @@ static int encode_frame(AVCodecContext *avctx, QSVEncContext *q,
 
     if (ret < 0) {
         av_packet_unref(&new_pkt);
+        av_freep(&sync);
         av_freep(&bs);
         if (ret == MFX_ERR_MORE_DATA)
             return 0;
@@ -996,6 +1053,7 @@ static int encode_frame(AVCodecContext *avctx, QSVEncContext *q,
         av_fifo_generic_write(q->async_fifo, &sync,    sizeof(sync),    NULL);
         av_fifo_generic_write(q->async_fifo, &bs,      sizeof(bs),    NULL);
     } else {
+        // TODO: ??? Unreachable code. See if (!sync) above
         av_freep(&sync);
         av_packet_unref(&new_pkt);
         av_freep(&bs);

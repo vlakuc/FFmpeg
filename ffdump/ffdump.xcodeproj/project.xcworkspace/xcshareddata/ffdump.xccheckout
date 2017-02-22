@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>827CA387-16C8-40AC-B08F-AB0C4C1AF5FE</string>
+	<key>IDESourceControlProjectName</key>
+	<string>ffdump</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>3861DE86-F2EE-4711-B021-D8916C6070A4</key>
+		<string>svn+ssh://svn.epiphan.com/svnrepos/svn_vga2web/trunk/epiphan/vga2cpu</string>
+		<key>af4b865d-ca94-47ef-a288-ebbb50acd850++1128</key>
+		<string>svn+ssh://svn.epiphan.com/svnrepos/svn_vga2web/trunk/epiphan/vga2cpu/ltib/vga2web</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>src/ffmpeg/ffmpeg-2.2.1/ffdump/ffdump.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>3861DE86-F2EE-4711-B021-D8916C6070A4</key>
+		<string>../../../../../../../vga2cpu</string>
+		<key>af4b865d-ca94-47ef-a288-ebbb50acd850++1128</key>
+		<string>../../../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectRepositoryRootDictionary</key>
+	<dict>
+		<key>3861DE86-F2EE-4711-B021-D8916C6070A4</key>
+		<string>svn+ssh://svn.epiphan.com/svnrepos/svn_vga2web</string>
+		<key>af4b865d-ca94-47ef-a288-ebbb50acd850++1128</key>
+		<string>svn+ssh://svn.epiphan.com/svnrepos/svn_vga2web</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>svn+ssh://svn.epiphan.com/svnrepos/svn_vga2web/trunk/epiphan/vga2cpu/ltib/vga2web/src/ffmpeg/ffmpeg-2.2.1/ffdump/ffdump.xcodeproj</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>af4b865d-ca94-47ef-a288-ebbb50acd850++1128</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>af4b865d-ca94-47ef-a288-ebbb50acd850++1128</string>
+			<key>IDESourceControlWCCName</key>
+			<string>svn_repository</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryBranchesRelativeLocationKey</key>
+			<string>branches</string>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.subversion</string>
+			<key>IDESourceControlRepositoryTagsRelativeLocationKey</key>
+			<string>tags</string>
+			<key>IDESourceControlRepositoryTrunkRelativeLocationKey</key>
+			<string>trunk</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>3861DE86-F2EE-4711-B021-D8916C6070A4</string>
+			<key>IDESourceControlWCCName</key>
+			<string>vga2cpu</string>
+		</dict>
+	</array>
+</dict>
+</plist>

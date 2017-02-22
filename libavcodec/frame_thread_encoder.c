@@ -28,6 +28,9 @@
 #include "internal.h"
 #include "thread.h"
 
+// Epiphan: for  FF_DISABLE_DEPRECATION_WARNINGS/FF_ENABLE_DEPRECATION_WARNINGS
+#include "libavutil/internal.h"
+
 #define MAX_THREADS 64
 #define BUFFER_SIZE (2*MAX_THREADS)
 
@@ -89,7 +92,11 @@ static void * attribute_align_arg worker(void *v){
         pthread_mutex_unlock(&c->buffer_mutex);
         av_frame_free(&frame);
         if(got_packet) {
+// Epiphan: Temporarily disable deprecation warning (av_dup_packet)
+FF_DISABLE_DEPRECATION_WARNINGS  
             int ret2 = av_dup_packet(pkt);
+// Epiphan: Temporarily disable deprecation warning (av_dup_packet)
+FF_ENABLE_DEPRECATION_WARNINGS              
             if (ret >= 0 && ret2 < 0)
                 ret = ret2;
         } else {

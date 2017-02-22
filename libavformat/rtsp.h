@@ -407,7 +407,10 @@ typedef struct RTSPState {
     char *user_agent;
 
     char default_lang[4];
+    
+    /* Added fields. */
     int buffer_size;
+    RTPCommonStreamParameters rtp_common;
 } RTSPState;
 
 #define RTSP_FLAG_FILTER_SRC  0x1    /**< Filter incoming UDP packets -

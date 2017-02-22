@@ -284,6 +284,19 @@ AVOutputFormat ff_hevc_muxer = {
 };
 #endif
 
+#if CONFIG_JPEG_MUXER
+AVOutputFormat ff_jpeg_muxer = {
+     .name             = "jpeg",
+     .long_name        = NULL_IF_CONFIG_SMALL("raw JPEG image"),
+     .mime_type        = "image/jpeg",
+     .extensions       = "jpeg,jpg",
+     .audio_codec      = AV_CODEC_ID_NONE,
+     .video_codec      = AV_CODEC_ID_MJPEG,
+     .write_packet     = ff_raw_write_packet,
+    .flags= AVFMT_NOTIMESTAMPS,
+};
+#endif
+
 #if CONFIG_M4V_MUXER
 AVOutputFormat ff_m4v_muxer = {
     .name              = "m4v",

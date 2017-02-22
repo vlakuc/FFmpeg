@@ -35,6 +35,9 @@
 
 #include "avformat.h"
 
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_DISABLE_DEPRECATION_WARNINGS
+
 #define HEXDUMP_PRINT(...)                                                    \
     do {                                                                      \
         if (!f)                                                               \
@@ -593,3 +596,6 @@ void av_dump_format(AVFormatContext *ic, int index,
 
     av_free(printed);
 }
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

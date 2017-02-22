@@ -63,6 +63,7 @@ static av_cold int audio_read_header(AVFormatContext *s1)
     AVStream *st;
     int ret;
     enum AVCodecID codec_id;
+    int max_audio_channels = 0;
 
     st = avformat_new_stream(s1, NULL);
     if (!st) {
@@ -72,7 +73,7 @@ static av_cold int audio_read_header(AVFormatContext *s1)
     }
     codec_id    = s1->audio_codec_id;
 
-    ret = ff_alsa_open(s1, SND_PCM_STREAM_CAPTURE, &s->sample_rate, s->channels,
+    ret = ff_alsa_open2(s1, SND_PCM_STREAM_CAPTURE, &s->sample_rate, &s->channels,
         &codec_id);
     if (ret < 0) {
         return AVERROR(EIO);
@@ -116,8 +117,9 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
             return AVERROR(EAGAIN);
         }
         if (ff_alsa_xrun_recover(s1, res) < 0) {
-            av_log(s1, AV_LOG_ERROR, "ALSA read error: %s\n",
-                   snd_strerror(res));
+            if(s->npackets > 0) {
+                av_log(s1, AV_LOG_ERROR, "ALSA read error: %s\n", snd_strerror(res));
+            }
             av_packet_unref(pkt);
 
             return AVERROR(EIO);
@@ -130,6 +132,7 @@ static int audio_read_packet(AVFormatContext *s1, AVPacket *pkt)
     dts -= av_rescale(delay + res, 1000000, s->sample_rate);
     pkt->pts = ff_timefilter_update(s->timefilter, dts, s->last_period);
     s->last_period = res;
+    s->npackets++;
 
     pkt->size = res * s->frame_size;
 

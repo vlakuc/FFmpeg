@@ -181,6 +181,17 @@ error:
                        s->buffer_size - s->buffer_index);                   \
 } while (0)
 
+
+#define ENCODE_BUFFER_INTERLEAVED(func, buf_type, buf_name) do {            \
+    lame_result = func(s->gfp,                                              \
+                       (buf_type *)buf_name[0],                             \
+                       frame->nb_samples,                                   \
+                       s->buffer + s->buffer_index,                         \
+                       s->buffer_size - s->buffer_index);                   \
+} while (0)
+
+
+
 static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
                                 const AVFrame *frame, int *got_packet_ptr)
 {
@@ -192,6 +203,9 @@ static int mp3lame_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
     if (frame) {
         switch (avctx->sample_fmt) {
+	case AV_SAMPLE_FMT_S16:
+            ENCODE_BUFFER_INTERLEAVED(lame_encode_buffer_interleaved, int16_t, frame->data);
+            break;
         case AV_SAMPLE_FMT_S16P:
             ENCODE_BUFFER(lame_encode_buffer, int16_t, frame->data);
             break;
@@ -338,6 +352,7 @@ AVCodec ff_libmp3lame_encoder = {
     .sample_fmts           = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_S32P,
                                                              AV_SAMPLE_FMT_FLTP,
                                                              AV_SAMPLE_FMT_S16P,
+                                                             AV_SAMPLE_FMT_S16,
                                                              AV_SAMPLE_FMT_NONE },
     .supported_samplerates = libmp3lame_sample_rates,
     .channel_layouts       = (const uint64_t[]) { AV_CH_LAYOUT_MONO,

@@ -20,7 +20,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
+#endif // _DEFAULT_SOURCE
+
 #define _BSD_SOURCE
 #include <sys/stat.h>
 #include "libavutil/avstring.h"

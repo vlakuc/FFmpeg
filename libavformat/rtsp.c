@@ -97,6 +97,8 @@ const AVOption ff_rtsp_options[] = {
     { "stimeout", "set timeout (in microseconds) of socket TCP I/O operations", OFFSET(stimeout), AV_OPT_TYPE_INT, {.i64 = 0}, INT_MIN, INT_MAX, DEC },
     COMMON_OPTS(),
     { "user-agent", "override User-Agent header", OFFSET(user_agent), AV_OPT_TYPE_STRING, {.str = LIBAVFORMAT_IDENT}, 0, 0, DEC },
+    { "forward_clock_offset_threshold", "forward clock offset in microseconds", OFFSET(rtp_common.client_clock_fast_threshold), AV_OPT_TYPE_INT64, { .i64 = 1000000 }, 0, INT64_MAX, DEC },
+    { "backward_clock_offset_threshold", "backward clock offset in microseconds", OFFSET(rtp_common.client_clock_slow_threshold), AV_OPT_TYPE_INT64, { .i64 = 1000000 }, 0, INT64_MAX, DEC },
     { NULL },
 };
 
@@ -2005,6 +2007,7 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
             }
 #endif
         } else if (n == 0 && ++timeout_cnt >= MAX_TIMEOUTS) {
+            av_log(NULL, AV_LOG_ERROR, "UDP timeout reached during RTP packet receiving.\n");
             return AVERROR(ETIMEDOUT);
         } else if (n < 0 && errno != EINTR)
             return AVERROR(errno);
@@ -2174,23 +2177,23 @@ redo:
                  * copy the same value to all other uninitialized streams,
                  * in order to map their timestamp origin to the same ntp time
                  * as this one. */
-                int i;
-                AVStream *st = NULL;
-                if (rtsp_st->stream_index >= 0)
-                    st = s->streams[rtsp_st->stream_index];
-                for (i = 0; i < rt->nb_rtsp_streams; i++) {
-                    RTPDemuxContext *rtpctx2 = rt->rtsp_streams[i]->transport_priv;
-                    AVStream *st2 = NULL;
-                    if (rt->rtsp_streams[i]->stream_index >= 0)
-                        st2 = s->streams[rt->rtsp_streams[i]->stream_index];
-                    if (rtpctx2 && st && st2 &&
-                        rtpctx2->first_rtcp_ntp_time == AV_NOPTS_VALUE) {
-                        rtpctx2->first_rtcp_ntp_time = rtpctx->first_rtcp_ntp_time;
-                        rtpctx2->rtcp_ts_offset = av_rescale_q(
-                            rtpctx->rtcp_ts_offset, st->time_base,
-                            st2->time_base);
-                    }
-                }
+                //int i;
+                //AVStream *st = NULL;
+                //if (rtsp_st->stream_index >= 0)
+                    //st = s->streams[rtsp_st->stream_index];
+                //for (i = 0; i < rt->nb_rtsp_streams; i++) {
+                    //RTPDemuxContext *rtpctx2 = rt->rtsp_streams[i]->transport_priv;
+                    //AVStream *st2 = NULL;
+                    //if (rt->rtsp_streams[i]->stream_index >= 0)
+                        //st2 = s->streams[rt->rtsp_streams[i]->stream_index];
+                    //if (rtpctx2 && st && st2 &&
+                        //rtpctx2->first_rtcp_ntp_time == AV_NOPTS_VALUE) {
+                        //rtpctx2->first_rtcp_ntp_time = rtpctx->first_rtcp_ntp_time;
+                        //rtpctx2->rtcp_ts_offset = av_rescale_q(
+                            //rtpctx->rtcp_ts_offset, st->time_base,
+                            //st2->time_base);
+                    //}
+                //}
                 // Make real NTP start time available in AVFormatContext
                 if (s->start_time_realtime == AV_NOPTS_VALUE) {
                     s->start_time_realtime = av_rescale (rtpctx->first_rtcp_ntp_time - (NTP_OFFSET << 32), 1000000, 1LL << 32);

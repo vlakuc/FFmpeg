@@ -42,8 +42,16 @@
 
 #include "avcodec.h"
 
+// 2012:    API version 1.3
+// 2012 R2: API version 1.4
+// 2012 R3: API version 1.5
+// 2013:    API version 1.6
+// 2013 R2: API version 1.7
+// 2014:    API version 1.8  <<<
+// 2014 R2: API version 1.9
+
 #define QSV_VERSION_MAJOR 1
-#define QSV_VERSION_MINOR 9
+#define QSV_VERSION_MINOR 8
 
 #define ASYNC_DEPTH_DEFAULT 4       // internal parallelism
 

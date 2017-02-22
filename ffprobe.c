@@ -50,6 +50,10 @@
 #include "libpostproc/postprocess.h"
 #include "cmdutils.h"
 
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+#include "libavutil/internal.h"
+FF_DISABLE_DEPRECATION_WARNINGS
+
 typedef struct InputStream {
     AVStream *st;
 
@@ -2213,6 +2217,7 @@ static int show_stream(WriterContext *w, AVFormatContext *fmt_ctx, int stream_id
     if (dec_ctx)
         print_q("codec_time_base", dec_ctx->time_base, '/');
 #endif
+        print_int("codec_ticks_per_frame",dec_ctx->ticks_per_frame); 
 
     /* print AVI/FourCC tag */
     av_get_codec_tag_string(val_str, sizeof(val_str), par->codec_tag);
@@ -3385,3 +3390,6 @@ end:
 
     return ret < 0;
 }
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

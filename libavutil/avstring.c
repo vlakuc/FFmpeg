@@ -110,6 +110,13 @@ size_t av_strlcatf(char *dst, size_t size, const char *fmt, ...)
     return len;
 }
 
+size_t av_vstrlcatf(char *dst, size_t size, const char *fmt, va_list args)
+{
+    int len = strlen(dst);
+    len += vsnprintf(dst + len, size > len ? size - len : 0, fmt, args);
+    return len;
+}
+
 char *av_asprintf(const char *fmt, ...)
 {
     char *p = NULL;

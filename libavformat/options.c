@@ -126,6 +126,8 @@ static void avformat_get_context_defaults(AVFormatContext *s)
     s->io_open  = io_open_default;
     s->io_close = io_close_default;
 
+    s->realtime_clock_offset = AV_NOPTS_VALUE;
+
     av_opt_set_defaults(s);
 }
 

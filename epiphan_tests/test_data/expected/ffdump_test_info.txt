@@ -1,0 +1,83 @@
+There are 6 streams
+##### stream 0 #####
+type: video
+codec: h264 (id=28)
+	framerate: 0/1
+	ticks per frame: 2
+	framesize: 1920 x 1080
+	GOP size: 12
+	block_align: 0
+container:
+	frame rate: 30/1
+	time_base: 1/30
+	start time: 0
+	duration: 29
+
+##### stream 1 #####
+type: audio
+codec: aac (id=86018)
+	framerate: 0/1
+	sample rate: 44100
+	channels: 2
+	block_align: 1536
+container:
+	time_base: 256/11025
+	start time: 0
+	duration: 43
+
+##### stream 2 #####
+type: video
+codec: h264 (id=28)
+	framerate: 0/1
+	ticks per frame: 2
+	framesize: 1280 x 720
+	GOP size: 12
+	block_align: 0
+container:
+	frame rate: 30/1
+	time_base: 1/30
+	start time: 0
+	duration: 29
+
+##### stream 3 #####
+type: audio
+codec: aac (id=86018)
+	framerate: 0/1
+	sample rate: 44100
+	channels: 2
+	block_align: 1536
+container:
+	time_base: 256/11025
+	start time: 0
+	duration: 43
+
+##### stream 4 #####
+type: video
+codec: h264 (id=28)
+	framerate: 0/1
+	ticks per frame: 2
+	framesize: 1920 x 1080
+	GOP size: 12
+	block_align: 0
+container:
+	frame rate: 30/1
+	time_base: 1/30
+	start time: 0
+	duration: 28
+
+##### stream 5 #####
+type: audio
+codec: aac (id=86018)
+	framerate: 0/1
+	sample rate: 44100
+	channels: 2
+	block_align: 1536
+container:
+	time_base: 256/11025
+	start time: 0
+	duration: 43
+
+metadata:
+comment=RTSP 17:video|RTSP 17:audio|RTSP 18:video|RTSP 18:audio|RTSP 19:video|RTSP 19:audio
+title=RTSP 17
+timeorigin=1464627504435349

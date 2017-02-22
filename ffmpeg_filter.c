@@ -39,6 +39,11 @@
 #include "libavutil/imgutils.h"
 #include "libavutil/samplefmt.h"
 
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+ #include "libavutil/internal.h"
+FF_DISABLE_DEPRECATION_WARNINGS
+
 static const enum AVPixelFormat *get_compliance_unofficial_pix_fmts(enum AVCodecID codec_id, const enum AVPixelFormat default_formats[])
 {
     static const enum AVPixelFormat mjpeg_formats[] =
@@ -1106,3 +1111,6 @@ int filtergraph_is_simple(FilterGraph *fg)
 {
     return !fg->graph_desc;
 }
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

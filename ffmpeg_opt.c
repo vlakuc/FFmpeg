@@ -41,6 +41,11 @@
 #include "libavutil/pixdesc.h"
 #include "libavutil/pixfmt.h"
 
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+#include "libavutil/internal.h"
+FF_DISABLE_DEPRECATION_WARNINGS
+
 #define DEFAULT_PASS_LOGFILENAME_PREFIX "ffmpeg2pass"
 
 #define MATCH_PER_STREAM_OPT(name, type, outvar, fmtctx, st)\
@@ -931,8 +936,7 @@ static int open_input_file(OptionsContext *o, const char *filename)
     /* get default parameters from command line */
     ic = avformat_alloc_context();
     if (!ic) {
-        print_error(filename, AVERROR(ENOMEM));
-        exit_program(1);
+        exit_error(filename, AVERROR(ENOMEM), 1);
     }
     if (o->nb_audio_sample_rate) {
         av_dict_set_int(&o->g->format_opts, "sample_rate", o->audio_sample_rate[o->nb_audio_sample_rate - 1].u.i, 0);
@@ -996,10 +1000,9 @@ static int open_input_file(OptionsContext *o, const char *filename)
     /* open the input file with generic avformat function */
     err = avformat_open_input(&ic, filename, file_iformat, &o->g->format_opts);
     if (err < 0) {
-        print_error(filename, err);
         if (err == AVERROR_PROTOCOL_NOT_FOUND)
             av_log(NULL, AV_LOG_ERROR, "Did you mean file:%s?\n", filename);
-        exit_program(1);
+        exit_error(filename, err, 1);
     }
     if (scan_all_pmts_set)
         av_dict_set(&o->g->format_opts, "scan_all_pmts", NULL, AV_DICT_MATCH_CASE);
@@ -2062,8 +2065,7 @@ static int open_output_file(OptionsContext *o, const char *filename)
 
     err = avformat_alloc_output_context2(&oc, NULL, o->format, filename);
     if (!oc) {
-        print_error(filename, err);
-        exit_program(1);
+        exit_error(filename, err, 1);
     }
 
     of->ctx = oc;
@@ -2096,8 +2098,7 @@ static int open_output_file(OptionsContext *o, const char *filename)
         av_strstart(filename, "http:", NULL)) {
         int err = parse_option(o, "metadata", "creation_time=now", options);
         if (err < 0) {
-            print_error(filename, err);
-            exit_program(1);
+            exit_error(filename, err, 1);
         }
     }
 
@@ -2108,8 +2109,7 @@ static int open_output_file(OptionsContext *o, const char *filename)
            parameters from ffserver */
         int err = read_ffserver_streams(o, oc, filename);
         if (err < 0) {
-            print_error(filename, err);
-            exit_program(1);
+            exit_error(filename, err, 1);
         }
         for(j = nb_output_streams - oc->nb_streams; j < nb_output_streams; j++) {
             ost = output_streams[j];
@@ -2404,8 +2404,7 @@ loop_end:
     /* check filename in case of an image number is expected */
     if (oc->oformat->flags & AVFMT_NEEDNUMBER) {
         if (!av_filename_number_test(oc->filename)) {
-            print_error(oc->filename, AVERROR(EINVAL));
-            exit_program(1);
+            exit_error(oc->filename, AVERROR(EINVAL), 1);
         }
     }
 
@@ -2423,8 +2422,7 @@ loop_end:
         if ((err = avio_open2(&oc->pb, filename, AVIO_FLAG_WRITE,
                               &oc->interrupt_callback,
                               &of->opts)) < 0) {
-            print_error(filename, err);
-            exit_program(1);
+            exit_error(filename, err, 1);
         }
     } else if (strcmp(oc->oformat->name, "image2")==0 && !av_filename_number_test(filename))
         assert_file_overwrite(filename);
@@ -3582,7 +3580,8 @@ const OptionDef options[] = {
         "force data codec ('copy' to copy stream)", "codec" },
     { "dn", OPT_BOOL | OPT_VIDEO | OPT_OFFSET | OPT_INPUT | OPT_OUTPUT, { .off = OFFSET(data_disable) },
         "disable data" },
-
+    { "syslog",          HAS_ARG | OPT_EXPERT, { .func_arg = NULL },
+      "enable syslog and set log prefix" },
 #if CONFIG_VAAPI
     { "vaapi_device", HAS_ARG | OPT_EXPERT, { .func_arg = opt_vaapi_device },
         "set VAAPI hardware device (DRM path or X11 display name)", "device" },
@@ -3590,3 +3589,6 @@ const OptionDef options[] = {
 
     { NULL, },
 };
+
+// Epiphan: Temporarily disable deprecation warnings (AVStream::codec)
+FF_ENABLE_DEPRECATION_WARNINGS

@@ -12,6 +12,10 @@ LIBAVFORMAT_MAJOR {
         ffurl_close;
         ffurl_open;
         ffurl_write;
+        ffurl_protocol_next;
+        #FIXME those are for epiphan's ffserver
+        ff_rawpacket_read_header;
+        ff_rawpacket_read_packet_header;
         #those are deprecated, remove on next bump
         url_feof;
     local:

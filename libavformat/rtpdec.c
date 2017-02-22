@@ -32,6 +32,7 @@
 #include "rtpdec_formats.h"
 
 #define MIN_FEEDBACK_INTERVAL 200000 /* 200 ms in us */
+#define NTP_TIME_USECS_SINCE_1900 9487534653230284800ULL
 
 static RTPDynamicProtocolHandler gsm_dynamic_handler = {
     .enc_name   = "GSM",
@@ -146,10 +147,92 @@ RTPDynamicProtocolHandler *ff_rtp_handler_find_by_id(int id,
     return NULL;
 }
 
+static int64_t wrap_delta_timestamp(AVStream *st, int64_t timestamp, int64_t rtcp_timestamp)
+{ 
+    int64_t result_timestamp = timestamp - rtcp_timestamp;
+    //Count an absolute delta timestamp value.
+    uint64_t absolute_delta = (result_timestamp < 0 ? -result_timestamp : result_timestamp);
+    
+    //Check if delta timestamp is over the half of timestamp range. It means there was wrap-around.
+    if( absolute_delta > ( (1ULL << st->pts_wrap_bits) / 2 ) )
+    {
+        //Count and return  wrapped delta.
+        result_timestamp = (1ULL << st->pts_wrap_bits) - absolute_delta;
+        return (timestamp > rtcp_timestamp) ? -result_timestamp : result_timestamp;
+    }
+    //If no wrap around return normal timestamps delta.    
+    return result_timestamp;
+}
+
+static int8_t clock_offset_above_threshold(int64_t offset_to_check, RTPDemuxContext *s)
+{
+    uint64_t abs_stream_clock_offset = (offset_to_check < 0 ) ? -offset_to_check : offset_to_check;
+    if( s->common_parameters && (offset_to_check < 0 && (abs_stream_clock_offset > s->common_parameters->client_clock_fast_threshold) ) \
+            || (offset_to_check > 0 && offset_to_check > s->common_parameters->client_clock_slow_threshold) )
+            return 1;
+    else
+        return 0;
+}
+
+static void time_origin_offset_update(RTPDemuxContext *s)
+{
+    if(s->last_rtcp_ntp_time != AV_NOPTS_VALUE)
+    {
+        uint64_t rapid_value = av_rescale((uint64_t)(s->last_rtcp_ntp_time - NTP_TIME_USECS_SINCE_1900 ), (uint64_t)AV_TIME_BASE, (uint64_t)(1) << 32  );
+        int64_t wrap_delta = wrap_delta_timestamp(s->st, s->timestamp, s->last_rtcp_timestamp);
+        /* Clock offset counting. */
+        if(s->st->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+        {
+            //Timestamp delta to the first received RTP data packet after RTCP.
+            
+            int64_t delta_time = av_rescale_q(wrap_delta, s->st->time_base, AV_TIME_BASE_Q );
+            int64_t packet_abs_time = rapid_value + delta_time;
+            /* Compare counted packet absolute time with it's receive time. */
+            int64_t new_stream_clock_offset = packet_abs_time - s->current_packet_reception_time;
+            
+            /* Check if clock_offset is not initialized. */
+            if(s->common_parameters && !(s->common_parameters->clock_offset_inited))
+            {
+                s->common_parameters->clock_offset_inited = 1;
+                /* Check clock_offset on user defined detect threshold. */
+                if(!clock_offset_above_threshold(new_stream_clock_offset, s))
+                {
+                    //Clock offset is small - trust server NTP
+                    s->common_parameters->ignore_input_ntp_time = 0;
+                    av_log(s->ic, AV_LOG_INFO, "Source clock difference is within confidence interval (%"PRId64" ms)\n", new_stream_clock_offset / 1000);
+                }
+                else
+                {
+                    //Clock offset is too large. Do not trust server NTP time.
+                    av_log(s->ic, AV_LOG_WARNING, "Significant source clock difference (%"PRId64" ms). Source time is ignored.\n", new_stream_clock_offset / 1000);
+                }
+            }
+            
+            //Update clock_offset value for statistic.              
+             s->ic->realtime_clock_offset = new_stream_clock_offset;
+        } 
+        /*  time_origin_offset calculation. */
+        if(s->common_parameters && !s->common_parameters->ignore_input_ntp_time)
+            //In case we trust server NTP time it's just a difference between time_origin and server NTP time.
+            s->time_origin_offset = av_rescale_q(rapid_value - s->common_parameters->time_origin, AV_TIME_BASE_Q, s->st->time_base);
+        else
+        {
+            /*  In case we don't trust server NTP time. */
+            /*  Save current packet timestamp as base_timestamp to count difference for other packets. */
+            /*  Count time_origin_offset as difference between current packet time and stream start time plus clock_skew counted from RTCP packets. */
+            s->base_timestamp = s->timestamp;
+            s->time_origin_offset = av_rescale_q(s->current_packet_reception_time - s->common_parameters->time_origin, AV_TIME_BASE_Q, s->st->time_base) + s->couted_clock_skew;
+        }
+    }
+} 
+
 static int rtcp_parse_packet(RTPDemuxContext *s, const unsigned char *buf,
                              int len)
 {
     int payload_len;
+    int64_t prev_rtcp_ntp_time; 
+    uint32_t prev_rtcp_timestamp;
+
     while (len >= 4) {
         payload_len = FFMIN(len, (AV_RB16(buf + 2) + 1) * 4);
 
@@ -161,13 +244,30 @@ static int rtcp_parse_packet(RTPDemuxContext *s, const unsigned char *buf,
             }
 
             s->last_rtcp_reception_time = av_gettime_relative();
+
+            prev_rtcp_ntp_time = s->last_rtcp_ntp_time;
+            prev_rtcp_timestamp = s->last_rtcp_timestamp;
+
             s->last_rtcp_ntp_time  = AV_RB64(buf + 8);
             s->last_rtcp_timestamp = AV_RB32(buf + 16);
             if (s->first_rtcp_ntp_time == AV_NOPTS_VALUE) {
                 s->first_rtcp_ntp_time = s->last_rtcp_ntp_time;
-                if (!s->base_timestamp)
-                    s->base_timestamp = s->last_rtcp_timestamp;
-                s->rtcp_ts_offset = (int32_t)(s->last_rtcp_timestamp - s->base_timestamp);
+                /*  Check if all streams receive SR. */
+                if(s->common_parameters && ++(s->common_parameters->inited_streams) >= s->ic->nb_streams)
+                    s->ic->realtime_clock_offset = 0;
+            }
+            else
+            {
+                /* Check if new time_origin_offset and clock_offset recalculation needed. */
+                if(s->time_offset_updated)
+                    s->time_offset_updated = 0;
+
+                if(s->st)
+                {
+                    int64_t delta_timestamp = wrap_delta_timestamp(s->st, s->last_rtcp_timestamp, prev_rtcp_timestamp);
+                    int64_t delta_time = av_rescale(s->last_rtcp_ntp_time - prev_rtcp_ntp_time, s->st->time_base.den, (uint64_t) s->st->time_base.num << 32);
+                    s->couted_clock_skew += delta_time - delta_timestamp;
+                }
             }
 
             break;
@@ -544,6 +644,11 @@ RTPDemuxContext *ff_rtp_parse_open(AVFormatContext *s1, AVStream *st,
     }
     // needed to send back RTCP RR in RTSP sessions
     gethostname(s->hostname, sizeof(s->hostname));
+
+    /* Set rtcp updated state flag. */
+    s->time_offset_updated = 0;
+    s->current_packet_reception_time = 0;
+    s->common_parameters = NULL;
     return s;
 }
 
@@ -572,23 +677,35 @@ static void finalize_packet(RTPDemuxContext *s, AVPacket *pkt, uint32_t timestam
     if (timestamp == RTP_NOTS_VALUE)
         return;
 
-    if (s->last_rtcp_ntp_time != AV_NOPTS_VALUE && s->ic->nb_streams > 1) {
-        int64_t addend;
-        int delta_timestamp;
-
-        /* compute pts from timestamp with received ntp_time */
-        delta_timestamp = timestamp - s->last_rtcp_timestamp;
-        /* convert to the PTS timebase */
-        addend = av_rescale(s->last_rtcp_ntp_time - s->first_rtcp_ntp_time,
-                            s->st->time_base.den,
-                            (uint64_t) s->st->time_base.num << 32);
-        pkt->pts = s->range_start_offset + s->rtcp_ts_offset + addend +
-                   delta_timestamp;
+    /*  First check if NTP time packets have been received. */
+    if(s->ic->realtime_clock_offset != AV_NOPTS_VALUE)
+    {
+        /*  Check if need to reclaculate time_origin_offset and clock_offset. */
+        int64_t delta_wrap;
+        if(!(s->time_offset_updated))
+        {
+            s->timestamp = timestamp;       //Save received packet timestamp.
+            time_origin_offset_update(s);
+            s->time_offset_updated = 1;     //Mark as updated.
+        }
+        
+        /* In both cases (we trust server NTP or not) calculate pts as sum of time_origin_offset and timestamp delta. */
+        if(s->common_parameters && !(s->common_parameters->ignore_input_ntp_time))
+            delta_wrap = wrap_delta_timestamp(s->st, timestamp, s->last_rtcp_timestamp);
+        else
+            delta_wrap = wrap_delta_timestamp(s->st, timestamp, s->base_timestamp);
+               
+        pkt->pts = s->time_origin_offset + delta_wrap;                     
         return;
     }
-
-    if (!s->base_timestamp)
+    
+    /* If no RTCP packets at stream use basic logic. */
+    if (!s->base_timestamp) {
         s->base_timestamp = timestamp;
+        s->time_origin_offset = av_rescale_q(av_gettime() - s->common_parameters->time_origin, AV_TIME_BASE_Q, s->st->time_base); 
+        //av_log(NULL, AV_LOG_INFO, "New time origin offset = %lld", s->time_origin_offset); 
+    }
+    
     /* assume that the difference is INT32_MIN < x < INT32_MAX,
      * but allow the first timestamp to exceed INT32_MAX */
     if (!s->timestamp)
@@ -596,8 +713,7 @@ static void finalize_packet(RTPDemuxContext *s, AVPacket *pkt, uint32_t timestam
     else
         s->unwrapped_timestamp += (int32_t)(timestamp - s->timestamp);
     s->timestamp = timestamp;
-    pkt->pts     = s->unwrapped_timestamp + s->range_start_offset -
-                   s->base_timestamp;
+    pkt->pts     = s->unwrapped_timestamp - s->base_timestamp + s->time_origin_offset;
 }
 
 static int rtp_parse_packet_internal(RTPDemuxContext *s, AVPacket *pkt,
@@ -798,6 +914,7 @@ static int rtp_parse_one_packet(RTPDemuxContext *s, AVPacket *pkt,
         timestamp = AV_RB32(buf + 4);
         // Calculate the jitter immediately, before queueing the packet
         // into the reordering queue.
+        s->current_packet_reception_time = av_gettime();
         rtcp_update_jitter(&s->statistics, timestamp, arrival_ts);
     }
 

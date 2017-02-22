@@ -49,6 +49,9 @@
 #if CONFIG_NETWORK
 #include "network.h"
 #endif
+#if CONFIG_RTSP_DEMUXER
+#include "rtsp.h"
+#endif
 #include "riff.h"
 #include "url.h"
 
@@ -805,7 +808,7 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
                We must re-call the demuxer to get the real packet. */
             if (ret == FFERROR_REDO)
                 continue;
-            if (!pktl || ret == AVERROR(EAGAIN))
+            if (!pktl || ret == AVERROR(EAGAIN) || (ret == AVERROR(ETIMEDOUT) && s->flags & AVFMT_FLAG_FORCE_TIMEOUT_ERROR) )
                 return ret;
             for (i = 0; i < s->nb_streams; i++) {
                 st = s->streams[i];
@@ -851,8 +854,11 @@ int ff_read_packet(AVFormatContext *s, AVPacket *pkt)
                 st->cur_dts = wrap_timestamp(st, st->cur_dts);
         }
 
-        pkt->dts = wrap_timestamp(st, pkt->dts);
-        pkt->pts = wrap_timestamp(st, pkt->pts);
+        if(s->realtime_clock_offset == AV_NOPTS_VALUE)
+        {
+            pkt->dts = wrap_timestamp(st, pkt->dts);
+            pkt->pts = wrap_timestamp(st, pkt->pts);
+        }
 
         force_codec_ids(s, st);
 
@@ -1498,7 +1504,7 @@ static int read_frame_internal(AVFormatContext *s, AVPacket *pkt)
         /* read next packet */
         ret = ff_read_packet(s, &cur_pkt);
         if (ret < 0) {
-            if (ret == AVERROR(EAGAIN))
+            if (ret == AVERROR(EAGAIN) || (ret == AVERROR(ETIMEDOUT) && s->flags & AVFMT_FLAG_FORCE_TIMEOUT_ERROR))
                 return ret;
             /* flush the parsers */
             for (i = 0; i < s->nb_streams; i++) {
@@ -5089,6 +5095,52 @@ int ff_generate_avci_extradata(AVStream *st)
 
     return 0;
 }
+
+
+void av_get_stream_statistics(AVFormatContext* ctx, AVStreamStatistics* statistics, int stream_index)
+{
+    if (statistics != NULL && ctx->iformat->name != NULL && strcmp("rtsp", ctx->iformat->name) == 0) {
+        RTSPState *rt = ctx->priv_data;
+        int i;
+        uint32_t extended_max = 0;
+        uint32_t expected = 0;
+        RTSPStream *rtsp_st = NULL;
+        RTPDemuxContext *rtpctx = NULL;
+        RTPStatistics *stats = NULL;
+
+        if (rt != NULL && rt->transport == RTSP_TRANSPORT_RTP) {
+            for (i = 0; i < rt->nb_rtsp_streams; i++) {
+                rtsp_st = rt->rtsp_streams[i];
+                if (!rtsp_st)
+                    continue;
+                
+                // Got statistics for the first stream in case of MPEG2TS (stream_index == -1)
+                if (rtsp_st->stream_index < 0 && stream_index > 0)
+                    break;
+
+                if (rtsp_st->stream_index != stream_index && rtsp_st->stream_index >= 0)
+                    continue;
+
+                rtpctx = rtsp_st->transport_priv;
+                if (!rtpctx)
+                    continue;
+
+                stats = &rtpctx->statistics;
+                if (!stats)
+                    continue;
+
+                statistics->rtp_packet_received = stats->received;
+
+                extended_max = stats->cycles + stats->max_seq;
+                expected = extended_max - stats->base_seq;
+
+                statistics->rtp_packet_expected = expected;
+                statistics->rtp_jitter = stats->jitter;
+            }
+        }
+    }
+}
+
 
 #if FF_API_NOCONST_GET_SIDE_DATA
 uint8_t *av_stream_get_side_data(AVStream *st,

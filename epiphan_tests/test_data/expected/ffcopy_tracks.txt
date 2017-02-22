@@ -1,0 +1,6 @@
+1: HDMI-A:video
+2: HDMI-A:audio
+3: RTSP 1:video
+4: RTSP 1:audio
+5: RTSP 2:video
+6: RTSP 2:audio

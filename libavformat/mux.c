@@ -240,7 +240,7 @@ static int init_muxer(AVFormatContext *s, AVDictionary **options)
     AVCodecParameters *par = NULL;
     AVOutputFormat *of = s->oformat;
     const AVCodecDescriptor *desc;
-    AVDictionaryEntry *e;
+//    AVDictionaryEntry *e;
 
     if (options)
         av_dict_copy(&tmp, *options, 0);
@@ -408,15 +408,15 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     /* set muxer identification string */
-    if (!(s->flags & AVFMT_FLAG_BITEXACT)) {
-        av_dict_set(&s->metadata, "encoder", LIBAVFORMAT_IDENT, 0);
-    } else {
-        av_dict_set(&s->metadata, "encoder", NULL, 0);
-    }
+    // if (!(s->flags & AVFMT_FLAG_BITEXACT)) {
+    //     av_dict_set(&s->metadata, "encoder", LIBAVFORMAT_IDENT, 0);
+    // } else {
+    //     av_dict_set(&s->metadata, "encoder", NULL, 0);
+    // }
 
-    for (e = NULL; e = av_dict_get(s->metadata, "encoder-", e, AV_DICT_IGNORE_SUFFIX); ) {
-        av_dict_set(&s->metadata, e->key, NULL, 0);
-    }
+    // for (e = NULL; e = av_dict_get(s->metadata, "encoder-", e, AV_DICT_IGNORE_SUFFIX); ) {
+    //     av_dict_set(&s->metadata, e->key, NULL, 0);
+    // }
 
     if (options) {
          av_dict_free(options);

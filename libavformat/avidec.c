@@ -982,6 +982,11 @@ FF_ENABLE_DEPRECATION_WARNINGS
                     return ret;
                 break;
             }
+
+        case MKTAG('e', 't', 'o', 'r'):
+            avi_read_tag(s, NULL, tag, size);
+            break;
+
         default:
             if (size > 1000000) {
                 char tag_buf[32];

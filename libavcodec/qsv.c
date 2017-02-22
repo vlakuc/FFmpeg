@@ -18,11 +18,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif // _DEFAULT_SOURCE
+
 #include <mfx/mfxvideo.h>
 #include <mfx/mfxplugin.h>
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "libavutil/avstring.h"
 #include "libavutil/error.h"
@@ -104,6 +109,7 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
 
     //search for valid graphics device
     for (adapter_num = 0;adapter_num < 6;adapter_num++) {
+        struct stat st;
 
         if (adapter_num<3) {
             snprintf(adapterpath,sizeof(adapterpath),
@@ -112,6 +118,9 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
             snprintf(adapterpath,sizeof(adapterpath),
                 "/dev/dri/card%d", adapter_num-3);
         }
+
+        if (stat(adapterpath, &st) < 0)
+            continue;       // Node is not preset. Skip it
 
         fd = open(adapterpath, O_RDWR);
         if (fd < 0) {
@@ -150,6 +159,12 @@ static int ff_qsv_set_display_handle(AVCodecContext *avctx, QSVSession *qs)
             break;
         }
     }
+    if (fd == -1) {
+        av_log(avctx, AV_LOG_ERROR,
+                "mfx init: valid display handle not found");
+        return -1;
+    }
+
 #endif //AVCODEC_QSV_LINUX_SESSION_HANDLE
     return 0;
 }

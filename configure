@@ -116,6 +116,7 @@ Program options:
   --disable-ffplay         disable ffplay build
   --disable-ffprobe        disable ffprobe build
   --disable-ffserver       disable ffserver build
+  --disable-ffcopy         disable ffcopy build
 
 Documentation options:
   --disable-doc            do not build documentation
@@ -224,6 +225,7 @@ External library support:
                            and libraw1394 [no]
   --enable-libebur128      enable libebur128 for EBU R128 measurement,
                            needed for loudnorm filter [no]
+  --enable-libfaac         enable AAC encoding via libfaac [no]
   --enable-libfdk-aac      enable AAC de/encoding via libfdk-aac [no]
   --enable-libflite        enable flite (voice synthesis) support via libflite [no]
   --enable-libfontconfig   enable libfontconfig, useful for drawtext filter [no]
@@ -287,6 +289,7 @@ External library support:
   --enable-opengl          enable OpenGL rendering [no]
   --enable-openssl         enable openssl, needed for https support
                            if gnutls is not used [no]
+  --disable-sysinfo        disable sysinfo [autodetect]
   --disable-schannel       disable SChannel SSP, needed for TLS support on
                            Windows if openssl and gnutls are not used [autodetect]
   --disable-sdl2           disable sdl2 [autodetect]
@@ -1492,6 +1495,7 @@ EXTERNAL_LIBRARY_LIST="
     libcelt
     libdc1394
     libebur128
+    libfaac
     libfdk_aac
     libflite
     libfontconfig
@@ -1550,6 +1554,7 @@ EXTERNAL_LIBRARY_LIST="
     opencl
     opengl
     openssl
+    sysinfo
     schannel
     sdl
     sdl2
@@ -1620,6 +1625,7 @@ LICENSE_LIST="
 PROGRAM_LIST="
     ffplay
     ffprobe
+    ffcopy
     ffserver
     ffmpeg
 "
@@ -2780,6 +2786,8 @@ pcm_mulaw_at_encoder_select="audio_frame_queue"
 chromaprint_muxer_deps="chromaprint"
 h264_videotoolbox_encoder_deps="videotoolbox_encoder pthreads"
 libcelt_decoder_deps="libcelt"
+libfaac_encoder_deps="libfaac"
+libfaac_encoder_select="audio_frame_queue"
 libfdk_aac_decoder_deps="libfdk_aac"
 libfdk_aac_encoder_deps="libfdk_aac"
 libfdk_aac_encoder_select="audio_frame_queue"
@@ -3148,6 +3156,7 @@ ffplay_deps="avcodec avformat swscale swresample sdl2"
 ffplay_libs='$sdl2_libs'
 ffplay_select="rdft crop_filter transpose_filter hflip_filter vflip_filter rotate_filter"
 ffprobe_deps="avcodec avformat"
+ffcopy_deps="avcodec avformat"
 ffserver_deps="avformat fork sarestart"
 ffserver_select="ffm_muxer rtp_protocol rtsp_demuxer"
 
@@ -5085,6 +5094,7 @@ die_license_disabled gpl x11grab
 
 die_license_disabled nonfree cuda
 die_license_disabled nonfree cuvid
+die_license_disabled nonfree libfaac
 die_license_disabled nonfree libnpp
 enabled gpl && die_license_disabled_gpl nonfree libfdk_aac
 enabled gpl && die_license_disabled_gpl nonfree openssl
@@ -5694,6 +5704,7 @@ enabled libcelt           && require libcelt celt/celt.h celt_decode -lcelt0 &&
                                die "ERROR: libcelt must be installed and version must be >= 0.11.0."; }
 enabled libcaca           && require_pkg_config caca caca.h caca_create_canvas
 enabled libebur128        && require ebur128 ebur128.h ebur128_relative_threshold -lebur128
+enabled libfaac           && require2 libfaac "stdint.h faac.h" faacEncGetVersion -lfaac
 enabled libfdk_aac        && { use_pkg_config fdk-aac "fdk-aac/aacenc_lib.h" aacEncOpen ||
                                { require libfdk_aac fdk-aac/aacenc_lib.h aacEncOpen -lfdk-aac &&
                                  warn "using libfdk without pkg-config"; } }
@@ -6042,6 +6053,10 @@ EOF
 
 # Funny iconv installations are not unusual, so check it after all flags have been set
 disabled iconv || check_func_headers iconv.h iconv || check_lib2 iconv.h iconv -liconv || disable iconv
+disabled sysinfo || check_func_headers "stdint.h sysinfo.h" sysinfo_get_string -lsysinfo || disable sysinfo
+disabled sysinfo || enable sysinfo
+enabled sysinfo && prepend ffmpeg_libs $($ldflags_filter "-lsysinfo")
+
 
 enabled debug && add_cflags -g"$debuglevel" && add_asflags -g"$debuglevel"
 

@@ -179,6 +179,7 @@ void avfilter_register_all(void)
     REGISTER_FILTER(DILATION,       dilation,       vf);
     REGISTER_FILTER(DISPLACE,       displace,       vf);
     REGISTER_FILTER(DRAWBOX,        drawbox,        vf);
+    REGISTER_FILTER(DRAWQRCODE,     drawqrcode,     vf);
     REGISTER_FILTER(DRAWGRAPH,      drawgraph,      vf);
     REGISTER_FILTER(DRAWGRID,       drawgrid,       vf);
     REGISTER_FILTER(DRAWTEXT,       drawtext,       vf);
@@ -359,6 +360,7 @@ void avfilter_register_all(void)
     REGISTER_FILTER(SHOWWAVES,      showwaves,      avf);
     REGISTER_FILTER(SHOWWAVESPIC,   showwavespic,   avf);
     REGISTER_FILTER(SPECTRUMSYNTH,  spectrumsynth,  vaf);
+    REGISTER_FILTER(AVSYNC,         avsync,         avf);
 
     /* multimedia sources */
     REGISTER_FILTER(AMOVIE,         amovie,         avsrc);

@@ -1461,6 +1461,7 @@ typedef struct AVFormatContext {
 #define AVFMT_FLAG_FAST_SEEK   0x80000 ///< Enable fast, but inaccurate seeks for some formats
 #define AVFMT_FLAG_SHORTEST   0x100000 ///< Stop muxing when the shortest stream stops.
 #define AVFMT_FLAG_AUTO_BSF   0x200000 ///< Wait for packet data before writing a header, and add bitstream filters as requested by the muxer
+#define AVFMT_FLAG_FORCE_TIMEOUT_ERROR 0x400000 ///< If timeout reached don't parse last packets.
 
     /**
      * Maximum size of the data read from input for determining
@@ -1906,6 +1907,27 @@ typedef struct AVFormatContext {
      * - decoding: set by user through AVOptions (NO direct access)
      */
     int max_streams;
+
+    /**
+     * Epiphan added fields
+     */
+
+     /**
+     * An estimated size of output file, including already written data and structures in memory, like indexes.
+     * Demuxing: unused
+     * Muxing: 
+     *  - Set by user to 0 to inform muxer that output file size estimation is required
+     *  - Update by muxer. -1 if muxer does not support output file size estimation.
+     */     
+    int64_t expected_file_size;
+
+     /**
+     * An estimated difference between sender's and destination's wall-clocks.
+     * In microseconds.
+     * Demuxing: Set by demuxer (if supported), AV_NOPTS_VALUE otherwise
+     * Muxing: not used
+     */     
+    int64_t realtime_clock_offset;
 } AVFormatContext;
 
 int av_format_get_probe_score(const AVFormatContext *s);
@@ -2923,6 +2945,35 @@ int avformat_match_stream_specifier(AVFormatContext *s, AVStream *st,
                                     const char *spec);
 
 int avformat_queue_attached_pictures(AVFormatContext *s);
+
+
+typedef struct AVStreamStatistics {
+    /**
+     * Expected number of RTP packets from the beginning of transmission
+     */
+    int64_t rtp_packet_expected;
+    
+    /**
+     * Number of packets actually received since transmission start
+     */
+    int64_t rtp_packet_received;
+    
+    /**
+     * Interarrivial jitter
+     */
+    int32_t rtp_jitter;
+} AVStreamStatistics;
+
+
+/**
+ * Get current stream's statistics for given stream_index
+ * 
+ * @param ctx           the format context which the stream is part of
+ * @param statistics    statistics structure to be filled in
+ * @param stream_index  index of strea for which statistics should be reported
+ */
+void av_get_stream_statistics(AVFormatContext* ctx, AVStreamStatistics* statistics, int stream_index);
+
 
 /**
  * Apply a list of bitstream filters to a packet.

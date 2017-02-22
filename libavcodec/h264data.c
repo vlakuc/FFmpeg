@@ -230,3 +230,4 @@ const uint8_t ff_h264_chroma_qp[7][QP_MAX_NUM + 1] = {
       30,31,32,33, 34, 35,
       CHROMA_QP_TABLE_END(14) },
 };
+

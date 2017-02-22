@@ -505,3 +505,4 @@ int ff_h264_get_profile(const SPS *sps)
 
     return profile;
 }
+

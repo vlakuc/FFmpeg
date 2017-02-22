@@ -1,4 +1,5 @@
 /*
+            audio_frame_size = av_get_audio_frame_duration(par, 0);
  * RTP output format
  * Copyright (c) 2002 Fabrice Bellard
  *
@@ -379,6 +380,35 @@ static int rtp_send_samples(AVFormatContext *s1,
     return 0;
 }
 
+// Send PCM samples (16bit, LE)
+//  @count - number of samples for one channel
+//  @channels - number of channels (interleaved)
+static int rtp_send_pcm_le16(AVFormatContext *s1, const int16_t* buf, int count, int channels)
+{
+    RTPMuxContext *s = s1->priv_data;
+    int sample_size = 2 * channels;
+    int samples_count = count * channels;																			// Total number of samples (for all channels)
+    int max_packet_samples = s->max_payload_size / sample_size * channels;		// Maximum number of samples in packet (for all channels)
+    int len, n, i;
+
+    n = 0;																																		// Number of sent samples (for all channels)
+    while (samples_count > 0) {
+        s->buf_ptr = s->buf;
+        len = FFMIN(max_packet_samples, samples_count);
+        // Convert LE samples to BE samples
+        for(i = 0; i < len; i++ ) {
+          *s->buf_ptr++ = (uint8_t)((*buf) >> 8);
+          *s->buf_ptr++ = (uint8_t)((*buf) & 0xFF);
+          buf++;
+        }
+        samples_count -= len;
+        s->timestamp = s->cur_timestamp + n / channels;
+        n += len;
+        ff_rtp_send_data(s1, s->buf, s->buf_ptr - s->buf, 0);
+    }
+    return 0;
+}
+
 static void rtp_send_mpegaudio(AVFormatContext *s1,
                                const uint8_t *buf1, int size)
 {
@@ -539,10 +569,11 @@ static int rtp_write_packet(AVFormatContext *s1, AVPacket *pkt)
     case AV_CODEC_ID_PCM_S8:
         return rtp_send_samples(s1, pkt->data, size, 8 * st->codecpar->channels);
     case AV_CODEC_ID_PCM_U16BE:
-    case AV_CODEC_ID_PCM_U16LE:
     case AV_CODEC_ID_PCM_S16BE:
-    case AV_CODEC_ID_PCM_S16LE:
         return rtp_send_samples(s1, pkt->data, size, 16 * st->codecpar->channels);
+    case AV_CODEC_ID_PCM_U16LE:
+    case AV_CODEC_ID_PCM_S16LE:
+        return rtp_send_pcm_le16(s1, (void*)pkt->data, size / (2 * st->codecpar->channels), st->codecpar->channels);
     case AV_CODEC_ID_ADPCM_G722:
         /* The actual sample size is half a byte per sample, but since the
          * stream clock rate is 8000 Hz while the sample rate is 16000 Hz,

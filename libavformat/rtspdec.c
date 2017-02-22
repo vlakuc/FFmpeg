@@ -99,6 +99,8 @@ static int rtsp_send_reply(AVFormatContext *s, enum RTSPStatusCode code,
     RTSPState *rt = s->priv_data;
     char message[4096];
     int index = 0;
+    AVDictionaryEntry* encoder;
+
     while (status_messages[index].code) {
         if (status_messages[index].code == code) {
             snprintf(message, sizeof(message), "RTSP/1.0 %d %s\r\n",
@@ -110,7 +112,12 @@ static int rtsp_send_reply(AVFormatContext *s, enum RTSPStatusCode code,
     if (!status_messages[index].code)
         return AVERROR(EINVAL);
     av_strlcatf(message, sizeof(message), "CSeq: %d\r\n", seq);
-    av_strlcatf(message, sizeof(message), "Server: %s\r\n", LIBAVFORMAT_IDENT);
+
+    if ((encoder = av_dict_get(s->metadata, "encoder", NULL, AV_DICT_IGNORE_SUFFIX)) != NULL)
+        av_strlcatf(message, sizeof(message), "Server: %s\r\n", encoder->value);
+    else
+        av_strlcatf(message, sizeof(message), "Server: %s\r\n", LIBAVFORMAT_IDENT);
+
     if (extracontent)
         av_strlcat(message, extracontent, sizeof(message));
     av_strlcat(message, "\r\n", sizeof(message));
@@ -509,6 +516,18 @@ static int rtsp_read_play(AVFormatContext *s)
     RTSPMessageHeader reply1, *reply = &reply1;
     int i;
     char cmd[1024];
+    AVDictionaryEntry *timeorigin_tag = NULL;
+
+    timeorigin_tag = av_dict_get(s->metadata, "timeorigin", NULL, 0);
+
+    if(timeorigin_tag)
+        rt->rtp_common.time_origin = atoll(timeorigin_tag->value);
+    else
+         rt->rtp_common.time_origin = av_gettime();
+
+    rt->rtp_common.inited_streams = 0;
+    rt->rtp_common.ignore_input_ntp_time = 1;
+    rt->rtp_common.clock_offset_inited = 0;
 
     av_log(s, AV_LOG_DEBUG, "hello state=%d\n", rt->state);
     rt->nb_byes = 0;
@@ -539,6 +558,10 @@ static int rtsp_read_play(AVFormatContext *s)
                 rtpctx->timestamp           = 0;
                 rtpctx->unwrapped_timestamp = 0;
                 rtpctx->rtcp_ts_offset      = 0;
+                rtpctx->time_offset_updated = 0;
+
+                rtpctx->couted_clock_skew   = 0;
+                rtpctx->common_parameters   = &(rt->rtp_common);
             }
         }
         if (rt->state == RTSP_STATE_PAUSED) {

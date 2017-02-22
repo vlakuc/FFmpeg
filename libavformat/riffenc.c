@@ -267,25 +267,54 @@ void ff_parse_specific_params(AVStream *st, int *au_rate,
 {
     AVCodecParameters *par = st->codecpar;
     int gcd;
-    int audio_frame_size;
 
-    audio_frame_size = av_get_audio_frame_duration2(par, 0);
-    if (!audio_frame_size)
-        audio_frame_size = par->frame_size;
-
-    *au_ssize = par->block_align;
-    if (audio_frame_size && par->sample_rate) {
-        *au_scale = audio_frame_size;
-        *au_rate  = par->sample_rate;
-    } else if (par->codec_type == AVMEDIA_TYPE_VIDEO ||
-               par->codec_type == AVMEDIA_TYPE_DATA ||
-               par->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+    if (par->codec_type == AVMEDIA_TYPE_VIDEO ||
+        par->codec_type == AVMEDIA_TYPE_DATA ||
+        par->codec_type == AVMEDIA_TYPE_SUBTITLE) {
+        *au_ssize = par->block_align;
         *au_scale = st->time_base.num;
         *au_rate  = st->time_base.den;
+        // TODO: get ticks_per_frame
+        /* if (par->ticks_per_frame > 0) */
+        /*     *au_scale *= par->ticks_per_frame; */
+    } else if ( par->codec_type == AVMEDIA_TYPE_AUDIO ) {
+        int audio_frame_size;
+        switch(par->codec_id)
+        {
+        case AV_CODEC_ID_MP3:
+        case AV_CODEC_ID_AAC:
+            *au_ssize = 0;
+			*au_scale = par->frame_size;
+			*au_rate = par->sample_rate;
+            break;
+             
+        case AV_CODEC_ID_PCM_S16LE:
+        case AV_CODEC_ID_PCM_S16BE:
+        case AV_CODEC_ID_PCM_U16LE:
+        case AV_CODEC_ID_PCM_U16BE:
+            *au_ssize = par->block_align;
+            *au_scale = 1;
+            *au_rate = par->sample_rate;
+            break;
+            
+        default:
+            audio_frame_size = av_get_audio_frame_duration2(par, 0);
+
+            if (!audio_frame_size)
+                audio_frame_size = par->frame_size;
+            *au_ssize = par->block_align;
+            if (audio_frame_size && par->sample_rate) {
+                *au_scale = audio_frame_size;
+                *au_rate  = par->sample_rate;
+            } else { 
+                *au_scale = par->block_align ? par->block_align * 8 : 8;
+                *au_rate  = par->bit_rate ? par->bit_rate :  8 * par->sample_rate;
+            }
+            
+        }
     } else {
-        *au_scale = par->block_align ? par->block_align * 8 : 8;
-        *au_rate  = par->bit_rate ? par->bit_rate :
-                    8 * par->sample_rate;
+        *au_scale = *au_rate = *au_ssize = 0;
+        return;
     }
     gcd        = av_gcd(*au_scale, *au_rate);
     *au_scale /= gcd;
@@ -310,6 +339,7 @@ static const char riff_tags[][5] = {
     "IAS8", "IAS9", "ICMS", "ICMT", "ICOP", "ICRD", "ICRP", "IDIM", "IDPI",
     "IENG", "IGNR", "IKEY", "ILGT", "ILNG", "IMED", "INAM", "IPLT", "IPRD",
     "IPRT", "ITRK", "ISBJ", "ISFT", "ISHP", "ISMP", "ISRC", "ISRF", "ITCH",
+    "ETOR", 
     { 0 }
 };
 
