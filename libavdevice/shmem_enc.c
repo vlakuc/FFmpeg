@@ -27,7 +27,7 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <sys/time.h>
-#include <libshm.h>
+#include <libshm/libshm.h>
 
 
 #include "libavutil/opt.h"

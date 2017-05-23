@@ -30,7 +30,7 @@
 #include <stdarg.h>
 #include <sys/time.h>
 #include <dirent.h>
-#include <libshm.h>
+#include <libshm/libshm.h>
 
 #include "libavutil/pixdesc.h"
 #include "libavutil/internal.h"
@@ -51,26 +51,33 @@
 
 typedef struct ShmemInContext_ {
     AVClass *class;
+    // Command line parameters:
+    AVRational framerate;             // desirable reading framerate
+    int        force_framerate;       // flag to make shmem producer write with provided framerate
+    int        input;                 // input source: video|audio|all
+    int        realtime;              // read the last frame from shared memory
+    char*      threshold;             // take frames, that satisfy threshold
+    int        threshold_min;         //    minimum threshold value
+    int        threshold_max;         //    maximum threshold value
 
-    AVRational framerate;
-    int        force_framerate;
-    int        input;
-    int        realtime;
-    char*      threshold;
-    int        threshold_min;
-    int        threshold_max;
+    // Technical fields:
+    int64_t    video_prev_pts;        // previous read video pts
+    int64_t    video_prev_read;       // previous successful shmem_lock/unlock call time
+    int64_t    video_delay;           // delay to read frame delayed by this value
+    int64_t    frames;                // total umbers of read frames
+    int        has_video;             // does source shmem contains video
 
-    int64_t    video_prev_pts;
-    int64_t    video_prev_read;
-    int64_t    video_delay;
-    int64_t    frames;
-    int        has_video;
+    //     fields to provide realtime video reading:
+    int64_t    video_pts;             // current video pts
+    int64_t    next_frame_read_time;  // next desired pts value
+    int64_t    last_read_frame_ts;    // previuos frame pts
+    int64_t    current_shm_time;      // time of newest shmem frame
 
-    int64_t    audio_pts;
-    int        has_audio;
+    int64_t    audio_pts;             // current audio pts
+    int        has_audio;             // does source shmem contains audio
 
-    int           close_reader;
-    shm_reader_t* reader;
+    int           close_reader;       // flag to show whether shm_reader should be closed
+    shm_reader_t* reader;             // pointer to shm_reader structure
 } ShmemInContext;
 
 typedef struct opaque_shm_frame_ {
@@ -234,7 +241,7 @@ static int shmem_read_header(AVFormatContext *ctx)
     s->has_audio       = 0;
     s->video_prev_pts  = AV_NOPTS_VALUE;
     s->video_prev_read = 0;
-    s->video_delay     = 5.0e6 / av_q2d(s->framerate);
+    s->video_delay     = (s->realtime)?0:(5.0e6 / av_q2d(s->framerate));
     s->frames          = 0;
 
     switch (s->input) {
@@ -286,6 +293,113 @@ static int64_t precise_pts(AVFormatContext *ctx)
     return timestamps[min_diff_i];
 }
 
+static int read_video_packet_realtime(AVFormatContext *ctx, AVPacket *pkt)
+{
+    ShmemInContext *s = ctx->priv_data;
+    int64_t delay = 0, enter_time = 0;
+    int rc = 0;
+    int frame_size = 0;
+    int frame_duration = (1.0e6 / av_q2d(s->framerate));
+    int max_duration_delta = frame_duration / 2;
+    int need_repeat = 0;
+    opaque_shm_frame_t *o = (opaque_shm_frame_t *)malloc(sizeof(opaque_shm_frame_t));;
+    o->s = s->reader;
+
+    if (!shm_reader_is_ready(s->reader)) {
+        rc = AVERROR(EOF);
+        av_log(ctx, AV_LOG_INFO,
+               "VIDEO memory not ready\n");
+
+        goto out;
+    }
+
+    o->video_frame.pts = 0;
+    enter_time = av_gettime();
+
+    if(s->next_frame_read_time != AV_NOPTS_VALUE)
+    {
+        delay = s->next_frame_read_time - enter_time;
+        if(delay > 0)
+            usleep(delay);
+        else
+            av_log(ctx, AV_LOG_WARNING, "delay is negative. (%lu)", delay);
+    }
+    else
+        s->next_frame_read_time = enter_time;
+
+    s->next_frame_read_time = av_gettime() + (1.0e6 / av_q2d(s->framerate));
+
+    need_repeat = 0;
+    do
+    {
+        o->video_frame.pts = av_gettime();
+        rc = shm_reader_lock_video(s->reader, &o->video_frame);
+
+        if (rc < 0) {
+            av_log(ctx, AV_LOG_ERROR, "Could not read video frame from shm at pts:%lu\n", o->video_frame.pts);
+            rc = AVERROR(EAGAIN);
+            goto out;
+        }
+        if(s->last_read_frame_ts == AV_NOPTS_VALUE)
+        {
+            s->last_read_frame_ts = o->video_frame.pts;
+            s->current_shm_time = o->video_frame.pts;
+        }
+        else
+        {
+            s->current_shm_time += (1.0e6 / av_q2d(s->framerate));
+
+            if(o->video_frame.pts == s->last_read_frame_ts )
+            {
+                if( (s->current_shm_time + max_duration_delta) >= (s->last_read_frame_ts + shm_reader_get_avg_frame_duration(s->reader)) )
+                {
+                    shm_reader_unlock_video(s->reader, &o->video_frame);
+                    usleep(shm_reader_get_jitter(s->reader));
+                    need_repeat = 1;
+                }
+            }
+            else
+            {
+                s->last_read_frame_ts = o->video_frame.pts;
+                s->current_shm_time = o->video_frame.pts;
+                if(need_repeat)
+                    need_repeat = 0;
+            }
+        }
+    }
+    while(need_repeat);
+
+    av_log(ctx, AV_LOG_TRACE, "RET = %lu\n", o->video_frame.pts);
+
+    frame_size = o->video_frame.height * o->video_frame.linesize[0] + \
+        (o->video_frame.height / 2) * o->video_frame.linesize[1] +    \
+        (o->video_frame.height / 2) * o->video_frame.linesize[2];
+
+    rc = av_new_packet(pkt, frame_size);
+    if (rc == 0) {
+        av_log(ctx, AV_LOG_DEBUG, "pts: (%lu, %lu)\n", o->video_frame.pts, av_gettime());
+        pkt->data = o->video_frame.data[0];
+        pkt->pts = ++s->frames * (1.0e6 / av_q2d(s->framerate));
+        pkt->size = frame_size;
+        pkt->duration = 1.0e6 / av_q2d(s->framerate);
+        pkt->buf->buffer->opaque = o;
+        pkt->buf->buffer->free = &destruct_packet_with_locked_frame;
+    }
+    else {
+        av_log(ctx, AV_LOG_ERROR,
+               "Could not allocate memory for packet\n");
+        rc = AVERROR(ENOMEM);
+        goto out;
+    }
+
+    s->video_pts = o->video_frame.pts;
+    return 0;
+
+out:
+    free(o);
+    return rc;
+}
+
 static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
 {
     ShmemInContext *s = ctx->priv_data;
@@ -298,8 +412,15 @@ static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
     memset(&o->video_frame, 0, sizeof(shm_video_frame_t));
 
     if (!shm_reader_is_ready(s->reader)) {
-        rc = AVERROR(EAGAIN);
+        rc = AVERROR(EOF);
+        av_log(ctx, AV_LOG_INFO,
+               "VIDEO memory not ready\n");
         goto out;
+    }
+
+    if (s->realtime || s->threshold) {
+        video_pts = shm_reader_get_video_pts(s->reader);
+        goto realtime_read;
     }
 
     read_delay = 1.0e6/av_q2d(s->framerate) - (av_gettime() - s->video_prev_read);
@@ -312,6 +433,7 @@ static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
     else
         video_pts = precise_pts(ctx);
 
+realtime_read:
     o->video_frame.pts = video_pts;
 
     rc = shm_reader_lock_video(s->reader, &o->video_frame);
@@ -321,8 +443,8 @@ static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
         goto out;
     }
 
-    if (s->video_prev_pts > o->video_frame.pts &&
-        av_gettime() - s->video_prev_read < shm_reader_get_avg_frame_duration(s->reader)) {
+    if (s->video_prev_pts > o->video_frame.pts && 
+        (av_gettime() - s->video_prev_read < shm_reader_get_avg_frame_duration(s->reader))) {
         shm_reader_unlock_video(s->reader, &o->video_frame);
         rc = AVERROR(EAGAIN);
         goto out;
@@ -334,7 +456,7 @@ static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
 
     rc = av_new_packet(pkt, frame_size);
     if (rc == 0) {
-        av_log(ctx, AV_LOG_INFO, "pts: (%lu, %lu)\n", o->video_frame.pts, av_gettime());
+        av_log(ctx, AV_LOG_DEBUG, "pts: (%lu, %lu)\n", o->video_frame.pts, av_gettime());
         s->video_prev_read = av_gettime();
         s->video_prev_pts = o->video_frame.pts;
 
@@ -348,18 +470,20 @@ static int read_video_packet(AVFormatContext *ctx, AVPacket *pkt)
     else {
         av_log(ctx, AV_LOG_ERROR,
                "Could not allocate memory for packet\n");
-        rc = AVERROR(ENOMEM);
+        rc = AVERROR(ENODATA);
         goto out;
     }
 
     if (s->threshold) {
-        if ((o->video_frame.pts < s->threshold_min) || (s->threshold_max < o->video_frame.pts)) {
+        int64_t tr = (s->video_prev_read - o->video_frame.pts) / 1000;
+        if ((tr < s->threshold_min) || (s->threshold_max < tr)) {
             av_log(ctx, AV_LOG_ERROR,
-                   "Could not read video frame with provided threshold\n");
+                   "Could not read video frame with provided threshold; got pts '%lu'(%lu))\n", o->video_frame.pts, tr);
+            shm_reader_unlock_video(s->reader, &o->video_frame);
             rc = AVERROR(ENODATA);
             goto out;
         }
-        av_log(ctx, AV_LOG_INFO,
+        av_log(ctx, AV_LOG_DEBUG,
                "Frame satisfies threshold\n");
     }
 
@@ -372,7 +496,6 @@ out:
 
 static int read_audio_packet(AVFormatContext *ctx, AVPacket *pkt)
 {
-    /*DEFAULT_AUDIO_GRAB_DURATION = 100*/
     ShmemInContext *s = ctx->priv_data;
 
     int sample_rate = 0;
@@ -382,7 +505,7 @@ static int read_audio_packet(AVFormatContext *ctx, AVPacket *pkt)
     int sample_size = SHM_AUDIO_CHANNELS * sizeof(uint16_t);
 
     if (!shm_reader_is_ready(s->reader)) {
-        return AVERROR(EAGAIN);
+        return AVERROR(EOF);
     }
 
     sample_rate = shm_reader_audio_sampling_rate(s->reader);
@@ -422,10 +545,16 @@ static int shmem_read_packet(AVFormatContext *ctx, AVPacket *pkt)
     AVStream *stream = ctx->streams[pkt->stream_index];
     ShmemInContext *s = ctx->priv_data;
 
-    if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && s->reader)
-        return read_video_packet(ctx, pkt);
-    else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && s->reader)
-        return read_audio_packet(ctx, pkt);
+    if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO && s->reader) {
+        if (s->realtime)
+            return read_video_packet_realtime(ctx, pkt);
+        else
+            return read_video_packet(ctx, pkt);
+    }
+    else {
+        if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && s->reader)
+            return read_audio_packet(ctx, pkt);
+    }
 
     return 0;
 }
@@ -434,7 +563,7 @@ static int shmem_read_close(AVFormatContext *ctx)
 {
     ShmemInContext *s = ctx->priv_data;
 
-    av_log(ctx, AV_LOG_ERROR, "shmem_read_close\n");
+    av_log(ctx, AV_LOG_DEBUG, "shmem_read_close\n");
     if (s->reader) {
         if (!s->has_video || !s->has_audio || s->close_reader) {
             shm_reader_close(s->reader);

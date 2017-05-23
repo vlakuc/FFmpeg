@@ -105,7 +105,7 @@
 #include <stdarg.h>
 
 #if CONFIG_SYSINFO
-#include <sysinfo.h>
+#include <sysinfo/sysinfo.h>
 #endif
 
 #include "ffmpeg.h"

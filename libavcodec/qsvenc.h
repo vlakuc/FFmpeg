@@ -70,6 +70,7 @@
 { "adaptive_b",     "Adaptive B-frame placement",             OFFSET(qsv.adaptive_b),     AV_OPT_TYPE_INT, { .i64 = -1 }, -1,          1, VE },                         \
 { "b_strategy",     "Strategy to choose between I/P/B-frames", OFFSET(qsv.b_strategy),    AV_OPT_TYPE_INT, { .i64 = -1 }, -1,          1, VE },                         \
 { "cavlc",          "Enable CAVLC",                           OFFSET(qsv.cavlc),          AV_OPT_TYPE_INT, { .i64 = 0 },   0,          1, VE },                         \
+{ "qsv_csc",        "Enable QSV color space convertion",      OFFSET(qsv.qsv_csc),        AV_OPT_TYPE_INT, { .i64 = 1 },   0,          1, VE },
 
 typedef int SetEncodeCtrlCB (AVCodecContext *avctx,
                              const AVFrame *frame, mfxEncodeCtrl* enc_ctrl);
@@ -86,12 +87,26 @@ typedef struct QSVEncContext {
     int height_align;
 
     mfxVideoParam param;
+    mfxVideoParam vpp_param;
+
     mfxFrameAllocRequest req;
+    mfxFrameAllocRequest vpp_req[2];
 
     mfxExtCodingOption  extco;
 #if QSV_HAVE_CO2
     mfxExtCodingOption2 extco2;
 #endif
+
+    int qsv_vpp;
+    mfxFrameAllocator mfxAllocator;
+
+    mfxFrameAllocResponse mfx_response_vpp_in;
+    mfxFrameSurface1 **mfx_surfaces_vpp_in;
+    int num_vpp_in_surfaces;
+
+    mfxFrameAllocResponse mfx_response_vpp_out_enc;
+    mfxFrameSurface1 **mfx_surfaces_vpp_out_enc;
+    int num_vpp_out_surfaces;
 
     mfxExtOpaqueSurfaceAlloc opaque_alloc;
     mfxFrameSurface1       **opaque_surfaces;
@@ -131,6 +146,7 @@ typedef struct QSVEncContext {
     int adaptive_b;
     int b_strategy;
     int cavlc;
+    int qsv_csc;
 
     int int_ref_type;
     int int_ref_cycle_size;
@@ -148,5 +164,7 @@ int ff_qsv_encode(AVCodecContext *avctx, QSVEncContext *q,
                   AVPacket *pkt, const AVFrame *frame, int *got_packet);
 
 int ff_qsv_enc_close(AVCodecContext *avctx, QSVEncContext *q);
+
+int ff_qsv_enc_reinit(AVCodecContext *avctx, QSVEncContext *q);
 
 #endif /* AVCODEC_QSVENC_H */

@@ -14,8 +14,6 @@ test_start "ffmpeg unit tests"
 
 ./test_ffdump_crop.sh
 
-./test_ffdump_lipsync.sh
-
 ./test_audio_level_enc.sh
 
 ./test_avi.sh

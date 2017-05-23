@@ -3,7 +3,6 @@
 
 . /etc/tests/common.inc
 
-FAILED=""
 
 FFDUMP=ffdump
 
@@ -18,19 +17,9 @@ do
     if [ -n "$CROP" -a -n "$NEEDED_RESULT" ]
     then
         RESULT=`$FFDUMP -c -r -d --crop $CROP test_data/checker_640x480.jpg | cut -f 3 | cut -d ':' -f 2 | tr -d ' '`
-
-        if [ "$RESULT" -ne "$NEEDED_RESULT" ]
-        then
-            echo "FAILED cropping $CROP : got $RESULT, needed $NEEDED_RESULT"
-            FAILED=1
-        else
-            echo "PASSED cropping $CROP"
-        fi
+        [ "$RESULT" -eq "$NEEDED_RESULT" ]; test_status "$CROP (${NEEDED_RESULT} => ${RESULT})"
     fi
 done < test_data/test_croppings.txt
-
-[ -z "$FAILED" ]
-test_status "ffdump crop test"
 
 test_done
 

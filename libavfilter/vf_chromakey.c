@@ -36,10 +36,171 @@ typedef struct ChromakeyContext {
 
     int is_yuv;
 
+    // Epiphan optimizations:
+    //  Low quality chroma key
+    int low_quality; 
+    int lowq_similarity;
+    int lowq_blend;
+
     int hsub_log2;
     int vsub_log2;
 } ChromakeyContext;
 
+static av_always_inline void get_pixel_uv(AVFrame *frame, int hsub_log2, int vsub_log2, int x, int y, uint8_t *u, uint8_t *v)
+{
+    if (x < 0 || x >= frame->width || y < 0 || y >= frame->height)
+        return;
+
+    x >>= hsub_log2;
+    y >>= vsub_log2;
+
+    *u = frame->data[1][frame->linesize[1] * y + x];
+    *v = frame->data[2][frame->linesize[2] * y + x];
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Epiphan optimizations:
+
+// Get pixel value without checking ranges
+//  Caller is responsible to provide valid coordinates
+static av_always_inline void get_pixel_uv_unsafe(AVFrame *frame, int hsub_log2, int vsub_log2, int x, int y, uint8_t *u, uint8_t *v)
+{
+    x >>= hsub_log2;
+    y >>= vsub_log2;
+
+    *u = frame->data[1][frame->linesize[1] * y + x];
+    *v = frame->data[2][frame->linesize[2] * y + x];
+}
+
+//  Low quality implementation - exact the same color, without blend
+static int do_chromakey_slice_lowq_exact(AVFilterContext *avctx, void *arg, int jobnr, int nb_jobs)
+{
+    AVFrame *frame = arg;
+
+    const int slice_start = (frame->height * jobnr) / nb_jobs;
+    const int slice_end = (frame->height * (jobnr + 1)) / nb_jobs;
+
+    ChromakeyContext *ctx = avctx->priv;
+
+    int x, y;
+    uint8_t u, v;
+    const uint8_t cu = ctx->chromakey_uv[0];
+    const uint8_t cv = ctx->chromakey_uv[1];
+    uint8_t *a;
+
+    for (y = slice_start; y < slice_end; ++y) {
+        a = &frame->data[3][frame->linesize[3] * y];
+        for (x = 0; x < frame->width; ++x) {
+            get_pixel_uv_unsafe(frame, ctx->hsub_log2, ctx->vsub_log2, x, y, &u, &v);
+            *a++ = (cu == u && cv == v) ? 0 : 255;
+        }
+    }
+    return 0;
+}
+
+//  Low quality implementation - exact the same color, without blend. Only for YUVA420P (2x2 sub-sampling)
+static int do_chromakey_slice_yuva420p_lowq_exact(AVFilterContext *avctx, void *arg, int jobnr, int nb_jobs)
+{
+    AVFrame *frame = arg;
+
+    const int slice_start = (frame->height * jobnr) / nb_jobs;
+    const int slice_end = (frame->height * (jobnr + 1)) / nb_jobs;
+
+    ChromakeyContext *ctx = avctx->priv;
+
+    int x, y;
+    uint8_t u, v;
+    const uint8_t cu = ctx->chromakey_uv[0];
+    const uint8_t cv = ctx->chromakey_uv[1];
+    uint8_t *a1, *a2;
+    uint8_t a;
+
+    for (y = slice_start; y < slice_end; y+=2) {
+        a1 = &frame->data[3][frame->linesize[3] * y];
+        a2 = a1 + frame->linesize[3];
+        for (x = 0; x < frame->width; x+=2, a1+=2, a2+=2 ) {
+            get_pixel_uv_unsafe(frame, 1, 1, x, y, &u, &v);
+            a = (cu == u && cv == v) ? 0 : 255;
+            a1[0] = a1[1] = a;
+            a2[0] = a2[1] = a;
+        }
+    }
+    return 0;
+}
+
+//  Low quality implementation - without blend. Only for YUVA420P (2x2 sub-sampling)
+static int do_chromakey_slice_yuva420p_lowq_blend(AVFilterContext *avctx, void *arg, int jobnr, int nb_jobs)
+{
+    AVFrame *frame = arg;
+
+    const int slice_start = (frame->height * jobnr) / nb_jobs;
+    const int slice_end = (frame->height * (jobnr + 1)) / nb_jobs;
+
+    ChromakeyContext *ctx = avctx->priv;
+
+    int x, y;
+    uint8_t u, v;
+    int du, dv;
+    const uint8_t cu = ctx->chromakey_uv[0];
+    const uint8_t cv = ctx->chromakey_uv[1];
+    uint8_t *a1, *a2;
+    uint8_t a;
+
+
+    for (y = slice_start; y < slice_end; y+=2) {
+        a1 = &frame->data[3][frame->linesize[3] * y];
+        a2 = a1 + frame->linesize[3];
+        for (x = 0; x < frame->width; x+=2, a1+=2, a2+=2 ) {
+            get_pixel_uv_unsafe(frame, 1, 1, x, y, &u, &v);
+            du = (int)u - cu;
+            dv = (int)v - cv;
+            a = av_clip_uint8_c(((du*du + dv*dv) - ctx->lowq_similarity) / ctx->lowq_blend);
+            a1[0] = a1[1] = a;
+            a2[0] = a2[1] = a;
+        }
+    }
+    return 0;
+}
+
+//  Low quality implementation - without blend. Only for YUVA420P (2x2 sub-sampling)
+static int do_chromakey_slice_yuva420p_lowq(AVFilterContext *avctx, void *arg, int jobnr, int nb_jobs)
+{
+    AVFrame *frame = arg;
+
+    const int slice_start = (frame->height * jobnr) / nb_jobs;
+    const int slice_end = (frame->height * (jobnr + 1)) / nb_jobs;
+
+    ChromakeyContext *ctx = avctx->priv;
+
+    int x, y;
+    uint8_t u, v;
+    int du, dv;
+    const uint8_t cu = ctx->chromakey_uv[0];
+    const uint8_t cv = ctx->chromakey_uv[1];
+    uint8_t *a1, *a2;
+    uint8_t a;
+
+
+    for (y = slice_start; y < slice_end; y+=2) {
+        a1 = &frame->data[3][frame->linesize[3] * y];
+        a2 = a1 + frame->linesize[3];
+        for (x = 0; x < frame->width; x+=2, a1+=2, a2+=2 ) {
+            get_pixel_uv_unsafe(frame, 1, 1, x, y, &u, &v);
+            du = (int)u - cu;
+            dv = (int)v - cv;
+            a = ((du*du + dv*dv) > ctx->lowq_similarity) ? 255 : 0;
+            a1[0] = a1[1] = a;
+            a2[0] = a2[1] = a;
+        }
+    }
+    return 0;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Original ffmpeg code
 static uint8_t do_chromakey_pixel(ChromakeyContext *ctx, uint8_t u[9], uint8_t v[9])
 {
     double diff = 0.0;
@@ -59,18 +220,6 @@ static uint8_t do_chromakey_pixel(ChromakeyContext *ctx, uint8_t u[9], uint8_t v
     } else {
         return (diff > ctx->similarity) ? 255 : 0;
     }
-}
-
-static av_always_inline void get_pixel_uv(AVFrame *frame, int hsub_log2, int vsub_log2, int x, int y, uint8_t *u, uint8_t *v)
-{
-    if (x < 0 || x >= frame->width || y < 0 || y >= frame->height)
-        return;
-
-    x >>= hsub_log2;
-    y >>= vsub_log2;
-
-    *u = frame->data[1][frame->linesize[1] * y + x];
-    *v = frame->data[2][frame->linesize[2] * y + x];
 }
 
 static int do_chromakey_slice(AVFilterContext *avctx, void *arg, int jobnr, int nb_jobs)
@@ -106,9 +255,28 @@ static int do_chromakey_slice(AVFilterContext *avctx, void *arg, int jobnr, int 
 static int filter_frame(AVFilterLink *link, AVFrame *frame)
 {
     AVFilterContext *avctx = link->dst;
+    ChromakeyContext *ctx = avctx->priv;
     int res;
+    avfilter_action_func* filter_func;
 
-    if (res = avctx->internal->execute(avctx, do_chromakey_slice, frame, NULL, FFMIN(frame->height, ff_filter_get_nb_threads(avctx))))
+    if (ctx->low_quality) {
+        if (frame->format == AV_PIX_FMT_YUVA420P) {
+            if (ctx->lowq_similarity == 0) {
+                filter_func = do_chromakey_slice_yuva420p_lowq_exact;
+
+            } else if (ctx->lowq_blend > 0) {
+                filter_func = do_chromakey_slice_yuva420p_lowq_blend;
+            } else {
+                filter_func = do_chromakey_slice_yuva420p_lowq;
+            }
+        }
+        else
+            filter_func = do_chromakey_slice_lowq_exact;
+    } else {
+        filter_func = do_chromakey_slice;
+    }
+
+    if (res = avctx->internal->execute(avctx, filter_func, frame, NULL, FFMIN(frame->height, ff_filter_get_nb_threads(avctx))))
         return res;
 
     return ff_filter_frame(avctx->outputs[0], frame);
@@ -128,6 +296,11 @@ static av_cold int initialize_chromakey(AVFilterContext *avctx)
     } else {
         ctx->chromakey_uv[0] = RGB_TO_U(ctx->chromakey_rgba);
         ctx->chromakey_uv[1] = RGB_TO_V(ctx->chromakey_rgba);
+    }
+
+    if (ctx->low_quality) {
+        ctx->lowq_similarity = (int)(ctx->similarity * ctx->similarity * 255.0 * 255.0);
+        ctx->lowq_blend = (int)(ctx->blend * 255.0);
     }
 
     return 0;
@@ -190,6 +363,7 @@ static const AVOption chromakey_options[] = {
     { "similarity", "set the chromakey similarity value", OFFSET(similarity), AV_OPT_TYPE_FLOAT, { .dbl = 0.01 }, 0.01, 1.0, FLAGS },
     { "blend", "set the chromakey key blend value", OFFSET(blend), AV_OPT_TYPE_FLOAT, { .dbl = 0.0 }, 0.0, 1.0, FLAGS },
     { "yuv", "color parameter is in yuv instead of rgb", OFFSET(is_yuv), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, FLAGS },
+    { "low_quality", "fast and low quality chromakey", OFFSET(low_quality), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, FLAGS },
     { NULL }
 };
 

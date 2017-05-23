@@ -37,6 +37,7 @@
 #include "qsv.h"
 #include "qsv_internal.h"
 #include "qsvenc.h"
+#include "qsv_alloc.h"
 
 static const struct {
     mfxU16 profile;
@@ -413,6 +414,18 @@ static int init_video_param(AVCodecContext *avctx, QSVEncContext *q)
         q->param.mfx.FrameInfo.FrameRateExtD  = avctx->time_base.num;
     }
 
+    if (avctx->pix_fmt == AV_PIX_FMT_YUV420P && q->qsv_csc) {
+        memset(&q->vpp_param, 0, sizeof(q->vpp_param));
+
+        q->vpp_param.AsyncDepth = q->async_depth;
+        q->vpp_param.IOPattern = MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY;
+
+        memcpy(&q->vpp_param.vpp.In, &q->param.mfx.FrameInfo, sizeof(q->param.mfx.FrameInfo));
+        q->vpp_param.vpp.In.FourCC = MFX_FOURCC_YV12;
+
+        memcpy(&q->vpp_param.vpp.Out, &q->param.mfx.FrameInfo, sizeof(q->param.mfx.FrameInfo));
+    }
+
     ret = select_rc_mode(avctx, q);
     if (ret < 0)
         return ret;
@@ -678,7 +691,7 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
     int opaque_alloc = 0;
     int ret;
 
-    q->param.IOPattern  = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
+    q->param.IOPattern  = q->qsv_csc ? MFX_IOPATTERN_IN_VIDEO_MEMORY : MFX_IOPATTERN_IN_SYSTEM_MEMORY;
     q->param.AsyncDepth = q->async_depth;
 
     q->async_fifo = av_fifo_alloc((1 + q->async_depth) *
@@ -757,6 +770,92 @@ int ff_qsv_enc_init(AVCodecContext *avctx, QSVEncContext *q)
         q->param.NumExtParam = q->nb_extparam_internal;
     }
 
+    q->qsv_vpp = 0;
+    q->mfx_surfaces_vpp_in = NULL;
+    q->num_vpp_in_surfaces = 0;
+    q->mfx_surfaces_vpp_out_enc = NULL;
+    q->num_vpp_out_surfaces = 0;
+
+    if (avctx->pix_fmt == AV_PIX_FMT_YUV420P && q->qsv_csc) {
+        q->mfxAllocator.pthis  = q->session;
+        q->mfxAllocator.Alloc  = simple_alloc;
+        q->mfxAllocator.Free   = simple_free;
+        q->mfxAllocator.Lock   = simple_lock;
+        q->mfxAllocator.Unlock = simple_unlock;
+        q->mfxAllocator.GetHDL = simple_gethdl;
+        set_display(&q->internal_qs);
+
+        ret = MFXVideoCORE_SetFrameAllocator(q->session, &q->mfxAllocator);
+        if (ret < 0) {
+            av_log(avctx, AV_LOG_ERROR, "MFXVideoCORE_SetFrameAllocator failed\n");
+            return ff_qsv_error(ret);
+        }
+
+        memset(&q->vpp_req, 0, sizeof(mfxFrameAllocRequest) * 2);
+        ret = MFXVideoVPP_QueryIOSurf(q->session, &q->vpp_param, q->vpp_req);
+        if (ret < 0) {
+            av_log(avctx, AV_LOG_ERROR, "MFXVideoVPP_QueryIOSurf failed\n");
+            return ff_qsv_error(ret);
+        }
+
+        q->vpp_req[0].NumFrameSuggested += 1;
+        q->num_vpp_in_surfaces = q->vpp_req[0].NumFrameSuggested;
+        q->num_vpp_out_surfaces = q->req.NumFrameSuggested + q->vpp_req[1].NumFrameSuggested;
+
+        q->req.NumFrameSuggested = q->num_vpp_out_surfaces;
+
+        // Allocate required surfaces
+        ret = q->mfxAllocator.Alloc(q->mfxAllocator.pthis, &q->vpp_req[0], &q->mfx_response_vpp_in);
+        if (ret < 0) {
+            av_log(avctx, AV_LOG_ERROR, "VPP input surface allocation failed\n");
+            return ff_qsv_error(ret);
+        }
+
+        q->mfx_surfaces_vpp_in = av_mallocz(sizeof(mfxFrameSurface1)*q->num_vpp_in_surfaces);
+        if (!q->mfx_surfaces_vpp_in)
+            return AVERROR(ENOMEM);
+
+        for (int i = 0; i < q->num_vpp_in_surfaces; i++) {
+
+            q->mfx_surfaces_vpp_in[i] = av_mallocz(sizeof(mfxFrameSurface1));
+            if (!q->mfx_surfaces_vpp_in[i])
+                return AVERROR(ENOMEM);
+
+            memset(q->mfx_surfaces_vpp_in[i], 0, sizeof(mfxFrameSurface1));
+            memcpy(&(q->mfx_surfaces_vpp_in[i]->Info), &(q->vpp_param.vpp.In), sizeof(mfxFrameInfo));
+            q->mfx_surfaces_vpp_in[i]->Data.MemId = q->mfx_response_vpp_in.mids[i];
+        }
+
+        ret = q->mfxAllocator.Alloc(q->mfxAllocator.pthis, &q->req, &q->mfx_response_vpp_out_enc);
+        if (ret < 0) {
+            av_log(avctx, AV_LOG_ERROR, "VPP output surface allocation failed\n");
+            return ff_qsv_error(ret);
+        }
+
+        q->mfx_surfaces_vpp_out_enc = av_mallocz(sizeof(mfxFrameSurface1)*q->num_vpp_out_surfaces);
+        if (!q->mfx_surfaces_vpp_out_enc)
+            return AVERROR(ENOMEM);
+
+        for (int i = 0; i < q->num_vpp_out_surfaces; i++) {
+            q->mfx_surfaces_vpp_out_enc[i] = av_mallocz(sizeof(mfxFrameSurface1));
+            if (!q->mfx_surfaces_vpp_out_enc[i])
+                return AVERROR(ENOMEM);
+
+            memset(q->mfx_surfaces_vpp_out_enc[i], 0, sizeof(mfxFrameSurface1));
+            memcpy(&(q->mfx_surfaces_vpp_out_enc[i]->Info), &(q->vpp_param.vpp.Out), sizeof(mfxFrameInfo));
+            q->mfx_surfaces_vpp_out_enc[i]->Data.MemId = q->mfx_response_vpp_out_enc.mids[i];
+        }
+
+        ret = MFXVideoVPP_Init(q->session, &q->vpp_param);
+        if (MFX_WRN_PARTIAL_ACCELERATION==ret) {
+            av_log(avctx, AV_LOG_WARNING, "VPP will work with partial HW acceleration\n");
+        } else if (ret < 0) {
+            av_log(avctx, AV_LOG_ERROR, "Error initializing the VPP\n");
+            return ff_qsv_error(ret);
+        }
+        q->qsv_vpp = 1;
+    }
+
     ret = MFXVideoENCODE_Init(q->session, &q->param);
     if (MFX_WRN_PARTIAL_ACCELERATION==ret) {
         av_log(avctx, AV_LOG_WARNING, "Encoder will work with partial HW acceleration\n");
@@ -798,6 +897,19 @@ static void clear_unused_frames(QSVEncContext *q)
         }
         cur = cur->next;
     }
+}
+
+
+static int get_free_video_frame_index(mfxFrameSurface1** pSurfacesPool, int nPoolSize)
+{
+    if (pSurfacesPool) {
+        for (int i = 0; i < nPoolSize; i++) {
+            if (0 == pSurfacesPool[i]->Data.Locked) {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 static int get_free_frame(QSVEncContext *q, QSVFrame **f)
@@ -895,21 +1007,87 @@ static int submit_frame(QSVEncContext *q, const AVFrame *frame,
         // TODO:
         //  Temporarily support YUV420
         //  REMOVE ME AFTER UPDATE pipeline
-        if ( frame->format == AV_PIX_FMT_YUV420P )
-        {
-            int original_pix_fmt = q->avctx->pix_fmt;
-            q->avctx->pix_fmt = AV_PIX_FMT_NV12;
-            qf->frame->height = FFALIGN(frame->height, q->height_align);
-            qf->frame->width  = FFALIGN(frame->width, q->width_align);
-            ret = ff_get_buffer(q->avctx, qf->frame, AV_GET_BUFFER_FLAG_REF);
-            q->avctx->pix_fmt = original_pix_fmt;
-            if (ret < 0)
-                return ret;
+        if (frame->format == AV_PIX_FMT_YUV420P) {
+            if (!q->qsv_csc) {
+                // Software YUV420P => NV12 color space conversion
+                int original_pix_fmt = q->avctx->pix_fmt;
+                q->avctx->pix_fmt = AV_PIX_FMT_NV12;
+                qf->frame->height = FFALIGN(frame->height, q->height_align);
+                qf->frame->width  = FFALIGN(frame->width, q->width_align);
+                ret = ff_get_buffer(q->avctx, qf->frame, AV_GET_BUFFER_FLAG_REF);
+                q->avctx->pix_fmt = original_pix_fmt;
+                if (ret < 0)
+                    return ret;
 
-            qf->frame->height = frame->height;
-            qf->frame->width  = frame->width;
-            copy_plane(frame->data[0], qf->frame->data[0], frame->height, frame->width, frame->linesize[0], qf->frame->linesize[0]);
-            convert_color_plane(frame->data[1], frame->data[2], qf->frame->data[1], frame->height/2, frame->width/2, frame->linesize[1], frame->linesize[2], qf->frame->linesize[1]);
+                qf->frame->height = frame->height;
+                qf->frame->width  = frame->width;
+                copy_plane(frame->data[0], qf->frame->data[0], frame->height, frame->width, frame->linesize[0], qf->frame->linesize[0]);
+                convert_color_plane(frame->data[1], frame->data[2], qf->frame->data[1], frame->height/2, frame->width/2, frame->linesize[1], frame->linesize[2], qf->frame->linesize[1]);
+            }
+            else {
+                // Hardware YUV420P => NV12 color space conversion
+                int vpp_surf_idx = -1;
+                int enc_surf_idx = -1;
+                mfxSyncPoint syncp_vpp;
+
+                vpp_surf_idx = get_free_video_frame_index(q->mfx_surfaces_vpp_in, q->num_vpp_in_surfaces);
+                if (vpp_surf_idx < 0) {
+                    av_log(q->avctx, AV_LOG_ERROR, "No free input surface\n");
+                    return ff_qsv_error(MFX_ERR_NOT_FOUND);
+                }
+
+                ret = q->mfxAllocator.Lock(q->mfxAllocator.pthis, q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.MemId, &(q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data));
+                if (ret < 0) {
+                    av_log(q->avctx, AV_LOG_ERROR, "Failed to lock surface\n");
+                    return ret;
+                }
+
+                ff_init_buffer_info(q->avctx, qf->frame);
+
+                qf->frame->height = FFALIGN(frame->height, q->height_align);
+                qf->frame->width  = FFALIGN(frame->width, q->width_align);
+
+                qf->frame->linesize[0] = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.PitchLow;
+                qf->frame->linesize[1] = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.PitchLow / 2;
+                qf->frame->linesize[2] = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.PitchLow / 2;
+                qf->frame->data[0]     = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.Y;
+                qf->frame->data[1]     = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.U;
+                qf->frame->data[2]     = q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.V;
+
+                ret = av_frame_copy(qf->frame, frame);
+
+                ret = q->mfxAllocator.Unlock(q->mfxAllocator.pthis, q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data.MemId, &(q->mfx_surfaces_vpp_in[vpp_surf_idx]->Data));
+                if (ret < 0) {
+                    av_log(q->avctx, AV_LOG_ERROR, "Failed to unlock surface\n");
+                    return ret;
+                }
+
+                enc_surf_idx = get_free_video_frame_index(q->mfx_surfaces_vpp_out_enc, q->num_vpp_out_surfaces);
+                if (enc_surf_idx < 0) {
+                    av_log(q->avctx, AV_LOG_ERROR, "No free output surface\n");
+                    return ff_qsv_error(MFX_ERR_NOT_FOUND);
+                }
+
+                for (;;) {
+                    ret = MFXVideoVPP_RunFrameVPPAsync(q->session, q->mfx_surfaces_vpp_in[vpp_surf_idx], q->mfx_surfaces_vpp_out_enc[enc_surf_idx], NULL, &syncp_vpp);
+                    if (MFX_WRN_DEVICE_BUSY == ret) {
+                        av_usleep(500);
+                    } else
+                        break;
+                }
+                if (ret < 0) {
+                    av_log(q->avctx, AV_LOG_ERROR, "MFXVideoVPP_RunFrameVPPAsync failed\n");
+                    return ff_qsv_error(ret);
+                }
+
+                qf->surface = q->mfx_surfaces_vpp_out_enc[enc_surf_idx];
+
+                qf->surface->Data.TimeStamp = av_rescale_q(frame->pts, q->avctx->time_base, (AVRational){1, 90000});
+
+                *new_frame = qf;
+
+                return 0;
+            }
         }
         /* make a copy if the input is not padded as libmfx requires */
         else if (     frame->height & (q->height_align - 1) ||
@@ -1032,6 +1210,18 @@ static int encode_frame(AVCodecContext *avctx, QSVEncContext *q,
     } while ( 1 );
 
     if (ret < 0) {
+#if QSV_VERSION_ATLEAST(1, 19)
+        if (ret == MFX_ERR_GPU_HANG) {
+            av_log(avctx, AV_LOG_WARNING, "EncodeFrameAsync: GPU hang occurred. Reinitializing\n");
+            ret = ff_qsv_enc_reinit(avctx, q);
+
+            av_packet_unref(&new_pkt);
+            av_freep(&sync);
+            av_freep(&bs);
+
+            return ret;
+        }
+#endif
         av_packet_unref(&new_pkt);
         av_freep(&sync);
         av_freep(&bs);
@@ -1085,6 +1275,18 @@ int ff_qsv_encode(AVCodecContext *avctx, QSVEncContext *q,
             ret = MFXVideoCORE_SyncOperation(q->session, *sync, 1000);
         } while (ret == MFX_WRN_IN_EXECUTION);
 
+#if QSV_VERSION_ATLEAST(1, 19)
+        if (MFX_ERR_GPU_HANG == ret) {
+            av_log(avctx, AV_LOG_WARNING, "SyncOperation: GPU hang occurred. Reinitializing\n");
+            return ff_qsv_enc_reinit(avctx, q);
+        }
+#endif        
+
+        if (ret) {
+            av_log(avctx, AV_LOG_ERROR, "SyncOperation failed %d\n", ret);
+            return ff_qsv_error(ret);
+        }
+
         new_pkt.dts  = av_rescale_q(bs->DecodeTimeStamp, (AVRational){1, 90000}, avctx->time_base);
         new_pkt.pts  = av_rescale_q(bs->TimeStamp,       (AVRational){1, 90000}, avctx->time_base);
         new_pkt.size = bs->DataLength;
@@ -1135,8 +1337,38 @@ int ff_qsv_enc_close(AVCodecContext *avctx, QSVEncContext *q)
 {
     QSVFrame *cur;
 
-    if (q->session)
+    if (q->session) {
+        if (q->qsv_vpp) {
+            MFXVideoVPP_Close(q->session);
+            q->qsv_vpp = 0;
+        }
         MFXVideoENCODE_Close(q->session);
+    }
+
+    if (q->mfx_surfaces_vpp_in) {
+        q->mfxAllocator.Free(q->mfxAllocator.pthis, &q->mfx_response_vpp_in);
+
+        for (int i = 0; i < q->num_vpp_in_surfaces; i++) {
+            av_free(q->mfx_surfaces_vpp_in[i]);
+        }
+        av_free(q->mfx_surfaces_vpp_in);
+        q->mfx_surfaces_vpp_in = NULL;
+
+        q->num_vpp_in_surfaces = 0;
+    }
+
+    if (q->mfx_surfaces_vpp_out_enc) {
+        q->mfxAllocator.Free(q->mfxAllocator.pthis, &q->mfx_response_vpp_out_enc);
+
+        for (int i = 0; i < q->num_vpp_out_surfaces; i++) {
+            av_free(q->mfx_surfaces_vpp_out_enc[i]);
+        }
+        av_free(q->mfx_surfaces_vpp_out_enc);
+        q->mfx_surfaces_vpp_out_enc = NULL;
+
+        q->num_vpp_out_surfaces = 0;
+    }
+
     q->session = NULL;
 
     ff_qsv_close_internal_session(&q->internal_qs);
@@ -1171,5 +1403,24 @@ int ff_qsv_enc_close(AVCodecContext *avctx, QSVEncContext *q)
 
     av_freep(&q->extparam);
 
+    return 0;
+}
+
+int ff_qsv_enc_reinit(AVCodecContext *avctx, QSVEncContext *q)
+{
+    int ret;
+
+    ff_qsv_enc_close(avctx, q);
+
+    q->param.ExtParam    = NULL;
+    q->param.NumExtParam = 0;
+
+    q->nb_extparam_internal = 0;
+
+    ret = ff_qsv_enc_init(avctx, q);
+    if (ret < 0) {
+        av_log(avctx, AV_LOG_ERROR, "Error %d reinitializing encoder\n", ret);
+        return ff_qsv_error(ret);
+    }
     return 0;
 }

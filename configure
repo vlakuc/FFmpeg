@@ -1832,6 +1832,7 @@ HEADERS_LIST="
     ES2_gl_h
     gsm_h
     io_h
+    libshm_libshm_h
     mach_mach_time_h
     machine_ioctl_bt848_h
     machine_ioctl_meteor_h
@@ -2966,6 +2967,10 @@ pulse_outdev_deps="libpulse"
 qtkit_indev_extralibs="-framework QTKit -framework Foundation -framework QuartzCore"
 qtkit_indev_select="qtkit"
 sdl2_outdev_deps="sdl2"
+shmem_indev_deps="libshm_libshm_h"
+shmem_indev_extralibs="-lshm"
+shmem_outdev_deps="libshm_libshm_h"
+shmem_outdev_extralibs="-lshm"
 sndio_indev_deps="sndio_h"
 sndio_outdev_deps="sndio_h"
 v4l_indev_deps="linux_videodev_h"
@@ -5962,6 +5967,9 @@ if enabled libcdio; then
     die "ERROR: No usable libcdio/cdparanoia found"
 fi
 
+enabled_any shmem_indev shmem_outdev &&
+    check_lib2 libshm/libshm.h shm_reader_open -lshm || die "ERROR: libshm not found"
+
 enabled xlib &&
     check_lib X11/Xlib.h XOpenDisplay -lX11 || disable xlib
 
@@ -6056,7 +6064,7 @@ EOF
 
 # Funny iconv installations are not unusual, so check it after all flags have been set
 disabled iconv || check_func_headers iconv.h iconv || check_lib2 iconv.h iconv -liconv || disable iconv
-disabled sysinfo || check_func_headers "stdint.h sysinfo.h" sysinfo_get_string -lsysinfo || disable sysinfo
+disabled sysinfo || check_func_headers "stdint.h sysinfo/sysinfo.h" sysinfo_get_string -lsysinfo || disable sysinfo
 disabled sysinfo || enable sysinfo
 enabled sysinfo && prepend ffmpeg_libs $($ldflags_filter "-lsysinfo")
 
@@ -6223,7 +6231,7 @@ elif enabled ccc; then
     add_cflags -msg_disable nonstandcast
     add_cflags -msg_disable unsupieee
 elif enabled gcc; then
-    check_optflags -fno-tree-vectorize
+    check_optflags -ftree-vectorize
     check_cflags -Werror=format-security
     check_cflags -Werror=implicit-function-declaration
     check_cflags -Werror=missing-prototypes

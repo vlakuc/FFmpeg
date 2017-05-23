@@ -56,7 +56,7 @@ next_step()
 measure_avsync()
 {
     local filter_opts=$1
-    ffmpeg -y -i $AVSYNC_SAMPLE -filter_complex "${filter_opts}" -f mp4 /dev/null > /dev/null 2>&1
+    ffmpeg -y -threads 1 -i $AVSYNC_SAMPLE -filter_complex "${filter_opts}" -f mp4 /dev/null > /dev/null 2>&1
 }
 
 
@@ -66,6 +66,13 @@ check_metrics()
     [ $GENERATE_TEST_DATA -eq 1 ] && cat $FILTER_OUTPUT | cut -f 2- > "${SANDBOX_PATH}/`basename $expected`"
     cat $FILTER_OUTPUT | cut -f 2- | diff -q $expected -
 }
+
+if ! ffmpeg -hide_banner -filters | grep -q -w avsync; then
+    test_start "AVSync filter"
+    test_ignored "avsync filter is not available"
+    test_done
+    exit 0
+fi
 
 
 setup

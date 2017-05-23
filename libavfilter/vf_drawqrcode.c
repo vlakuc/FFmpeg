@@ -1,6 +1,7 @@
 #include "libavutil/common.h"
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
+#include <libavutil/timestamp.h>
 #include "avfilter.h"
 #include "formats.h"
 #include "internal.h"
@@ -72,8 +73,10 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
     unsigned char *p, * prev_row;
     unsigned int margin, real_width;
 
-    sprintf(buf, "%" PRId64, frame->pts);
-    qrcode = QRcode_encodeString(buf, 0, QR_ECLEVEL_H, QR_MODE_8, 0);
+    qrcode = QRcode_encodeString(
+        av_ts2str(av_rescale_q(frame->pts, inlink->time_base, AV_TIME_BASE_Q )),
+        0, QR_ECLEVEL_H, QR_MODE_8, 0);
+    
     p = qrcode->data;
 
     margin = s->margin;

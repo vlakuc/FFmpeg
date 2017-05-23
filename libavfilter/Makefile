@@ -6,6 +6,7 @@ HEADERS = avfilter.h                                                    \
           avfiltergraph.h                                               \
           buffersink.h                                                  \
           buffersrc.h                                                   \
+          drawutils.h 													\
           version.h                                                     \
 
 OBJS = allfilters.o                                                     \
