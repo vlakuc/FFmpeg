@@ -700,6 +700,7 @@ static void celt_decode_bands(CeltFrame *f, OpusRangeCoder *rc)
     memset(f->block[1].coeffs, 0, sizeof(f->block[0].coeffs));
 
     for (i = f->start_band; i < f->end_band; i++) {
+        uint32_t cm[2] = { (1 << f->blocks) - 1, (1 << f->blocks) - 1 };
         int band_offset = ff_celt_freq_bands[i] << f->size;
         int band_size   = ff_celt_freq_range[i] << f->size;
         float *X = f->block[0].coeffs + band_offset;
@@ -708,8 +709,7 @@ static void celt_decode_bands(CeltFrame *f, OpusRangeCoder *rc)
         int consumed = opus_rc_tell_frac(rc);
         float *norm2 = norm + 8 * 100;
         int effective_lowband = -1;
-        unsigned int cm[2];
-        int b;
+        int b = 0;
 
         /* Compute how many bits we want to allocate to this band */
         if (i != f->start_band)
@@ -718,15 +718,14 @@ static void celt_decode_bands(CeltFrame *f, OpusRangeCoder *rc)
         if (i <= f->coded_bands - 1) {
             int curr_balance = f->remaining / FFMIN(3, f->coded_bands-i);
             b = av_clip_uintp2(FFMIN(f->remaining2 + 1, f->pulses[i] + curr_balance), 14);
-        } else
-            b = 0;
+        }
 
         if (ff_celt_freq_bands[i] - ff_celt_freq_range[i] >= ff_celt_freq_bands[f->start_band] &&
             (update_lowband || lowband_offset == 0))
             lowband_offset = i;
 
         /* Get a conservative estimate of the collapse_mask's for the bands we're
-        going to be folding from. */
+           going to be folding from. */
         if (lowband_offset != 0 && (f->spread != CELT_SPREAD_AGGRESSIVE ||
                                     f->blocks > 1 || f->tf_change[i] < 0)) {
             int foldstart, foldend;
@@ -744,10 +743,7 @@ static void celt_decode_bands(CeltFrame *f, OpusRangeCoder *rc)
                 cm[0] |= f->block[0].collapse_masks[j];
                 cm[1] |= f->block[f->channels - 1].collapse_masks[j];
             }
-        } else
-            /* Otherwise, we'll be using the LCG to fold, so all blocks will (almost
-            always) be non-zero.*/
-            cm[0] = cm[1] = (1 << f->blocks) - 1;
+        }
 
         if (f->dual_stereo && i == f->intensity_stereo) {
             /* Switch off dual stereo to do intensity */
@@ -757,15 +753,15 @@ static void celt_decode_bands(CeltFrame *f, OpusRangeCoder *rc)
         }
 
         if (f->dual_stereo) {
-            cm[0] = ff_celt_decode_band(f, rc, i, X, NULL, band_size, b / 2, f->blocks,
+            cm[0] = f->pvq->decode_band(f->pvq, f, rc, i, X, NULL, band_size, b / 2, f->blocks,
                                         effective_lowband != -1 ? norm + (effective_lowband << f->size) : NULL, f->size,
                                         norm + band_offset, 0, 1.0f, lowband_scratch, cm[0]);
 
-            cm[1] = ff_celt_decode_band(f, rc, i, Y, NULL, band_size, b/2, f->blocks,
+            cm[1] = f->pvq->decode_band(f->pvq, f, rc, i, Y, NULL, band_size, b/2, f->blocks,
                                         effective_lowband != -1 ? norm2 + (effective_lowband << f->size) : NULL, f->size,
                                         norm2 + band_offset, 0, 1.0f, lowband_scratch, cm[1]);
         } else {
-            cm[0] = ff_celt_decode_band(f, rc, i, X, Y, band_size, b, f->blocks,
+            cm[0] = f->pvq->decode_band(f->pvq, f, rc, i, X, Y, band_size, b, f->blocks,
                                         effective_lowband != -1 ? norm + (effective_lowband << f->size) : NULL, f->size,
                                         norm + band_offset, 0, 1.0f, lowband_scratch, cm[0]|cm[1]);
             cm[1] = cm[0];
@@ -988,6 +984,8 @@ void ff_celt_free(CeltFrame **f)
     for (i = 0; i < FF_ARRAY_ELEMS(frm->imdct); i++)
         ff_mdct15_uninit(&frm->imdct[i]);
 
+    ff_celt_pvq_uninit(&frm->pvq);
+
     av_freep(&frm->dsp);
     av_freep(f);
 }
@@ -1010,11 +1008,12 @@ int ff_celt_init(AVCodecContext *avctx, CeltFrame **f, int output_channels)
     frm->avctx           = avctx;
     frm->output_channels = output_channels;
 
-    for (i = 0; i < FF_ARRAY_ELEMS(frm->imdct); i++) {
-        ret = ff_mdct15_init(&frm->imdct[i], 1, i + 3, -1.0f);
-        if (ret < 0)
+    for (i = 0; i < FF_ARRAY_ELEMS(frm->imdct); i++)
+        if ((ret = ff_mdct15_init(&frm->imdct[i], 1, i + 3, -1.0f)) < 0)
             goto fail;
-    }
+
+    if ((ret = ff_celt_pvq_init(&frm->pvq)) < 0)
+        goto fail;
 
     frm->dsp = avpriv_float_dsp_alloc(avctx->flags & AV_CODEC_FLAG_BITEXACT);
     if (!frm->dsp) {

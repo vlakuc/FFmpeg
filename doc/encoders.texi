@@ -549,7 +549,8 @@ The following options are supported by FFmpeg's flac encoder.
 @table @option
 @item compression_level
 Sets the compression level, which chooses defaults for many other options
-if they are not set explicitly.
+if they are not set explicitly. Valid values are from 0 to 12, 5 is the
+default.
 
 @item frame_size
 Sets the size of the frames in samples per channel.
@@ -1665,7 +1666,7 @@ option to 2.
 Enable frame parallel decodability features.
 @item aq-mode
 Set adaptive quantization mode (0: off (default), 1: variance 2: complexity, 3:
-cyclic refresh).
+cyclic refresh, 4: equator360).
 @item colorspace @emph{color-space}
 Set input color space. The VP9 bitstream supports signaling the following
 colorspaces:
@@ -1678,6 +1679,8 @@ colorspaces:
 @item @samp{smpte240m} @emph{smpte240}
 @item @samp{bt2020_ncl} @emph{bt2020}
 @end table
+@item row-mt @var{boolean}
+Enable row based multi-threading.
 @end table
 
 @end table

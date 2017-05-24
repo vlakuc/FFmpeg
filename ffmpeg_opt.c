@@ -185,7 +185,7 @@ static int show_hwaccels(void *optctx, const char *opt, const char *arg)
     int i;
 
     printf("Hardware acceleration methods:\n");
-    for (i = 0; i < FF_ARRAY_ELEMS(hwaccels) - 1; i++) {
+    for (i = 0; hwaccels[i].name; i++) {
         printf("%s\n", hwaccels[i].name);
     }
     printf("\n");
@@ -736,10 +736,6 @@ static void add_input_streams(OptionsContext *o, AVFormatContext *ic)
             // avformat_find_stream_info() doesn't set this for us anymore.
             ist->dec_ctx->framerate = st->avg_frame_rate;
 
-            ist->resample_height  = ist->dec_ctx->height;
-            ist->resample_width   = ist->dec_ctx->width;
-            ist->resample_pix_fmt = ist->dec_ctx->pix_fmt;
-
             MATCH_PER_STREAM_OPT(frame_rates, str, framerate, ic, st);
             if (framerate && av_parse_video_rate(&ist->framerate,
                                                  framerate) < 0) {
@@ -804,12 +800,6 @@ static void add_input_streams(OptionsContext *o, AVFormatContext *ic)
             ist->guess_layout_max = INT_MAX;
             MATCH_PER_STREAM_OPT(guess_layout_max, i, ist->guess_layout_max, ic, st);
             guess_input_channel_layout(ist);
-
-            ist->resample_sample_fmt     = ist->dec_ctx->sample_fmt;
-            ist->resample_sample_rate    = ist->dec_ctx->sample_rate;
-            ist->resample_channels       = ist->dec_ctx->channels;
-            ist->resample_channel_layout = ist->dec_ctx->channel_layout;
-
             break;
         case AVMEDIA_TYPE_DATA:
         case AVMEDIA_TYPE_SUBTITLE: {
@@ -937,6 +927,7 @@ static int open_input_file(OptionsContext *o, const char *filename)
         print_error(filename, AVERROR(ENOMEM));
         exit_program(1);
     }
+    ic->flags |= AVFMT_FLAG_KEEP_SIDE_DATA;
     if (o->nb_audio_sample_rate) {
         av_dict_set_int(&o->g->format_opts, "sample_rate", o->audio_sample_rate[o->nb_audio_sample_rate - 1].u.i, 0);
     }
@@ -1318,6 +1309,17 @@ static OutputStream *new_output_stream(OptionsContext *o, AVFormatContext *oc, e
             exit_program(1);
         }
         st->time_base = q;
+    }
+
+    MATCH_PER_STREAM_OPT(enc_time_bases, str, time_base, oc, st);
+    if (time_base) {
+        AVRational q;
+        if (av_parse_ratio(&q, time_base, INT_MAX, 0, NULL) < 0 ||
+            q.den <= 0) {
+            av_log(NULL, AV_LOG_FATAL, "Invalid time base: %s\n", time_base);
+            exit_program(1);
+        }
+        ost->enc_timebase = q;
     }
 
     ost->max_frames = INT64_MAX;
@@ -1922,6 +1924,7 @@ static int read_ffserver_streams(OptionsContext *o, AVFormatContext *s, const ch
     int i, err;
     AVFormatContext *ic = avformat_alloc_context();
 
+    ic->flags |= AVFMT_FLAG_KEEP_SIDE_DATA;
     ic->interrupt_callback = int_cb;
     err = avformat_open_input(&ic, filename, NULL, NULL);
     if (err < 0)
@@ -2015,33 +2018,6 @@ static int init_complex_filters(void)
 
     for (i = 0; i < nb_filtergraphs; i++) {
         ret = init_complex_filtergraph(filtergraphs[i]);
-        if (ret < 0)
-            return ret;
-    }
-    return 0;
-}
-
-static int configure_complex_filters(void)
-{
-    int i, j, ret = 0;
-
-    for (i = 0; i < nb_filtergraphs; i++) {
-        FilterGraph *fg = filtergraphs[i];
-
-        if (filtergraph_is_simple(fg))
-            continue;
-
-        for (j = 0; j < fg->nb_inputs; j++) {
-            ret = ifilter_parameters_from_decoder(fg->inputs[j],
-                                                  fg->inputs[j]->ist->dec_ctx);
-            if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR,
-                       "Error initializing filtergraph %d input %d\n", i, j);
-                return ret;
-            }
-        }
-
-        ret = configure_filtergraph(filtergraphs[i]);
         if (ret < 0)
             return ret;
     }
@@ -2584,8 +2560,6 @@ loop_end:
             av_dict_copy(&output_streams[i]->st->metadata, ist->st->metadata, AV_DICT_DONT_OVERWRITE);
             if (!output_streams[i]->stream_copy) {
                 av_dict_set(&output_streams[i]->st->metadata, "encoder", NULL, 0);
-                if (ist->autorotate)
-                    av_dict_set(&output_streams[i]->st->metadata, "rotate", NULL, 0);
             }
         }
 
@@ -2675,9 +2649,15 @@ loop_end:
             for (j = 0; j < oc->nb_streams; j++) {
                 ost = output_streams[nb_output_streams - oc->nb_streams + j];
                 if ((ret = check_stream_specifier(oc, oc->streams[j], stream_spec)) > 0) {
-                    av_dict_set(&oc->streams[j]->metadata, o->metadata[i].u.str, *val ? val : NULL, 0);
                     if (!strcmp(o->metadata[i].u.str, "rotate")) {
-                        ost->rotate_overridden = 1;
+                        char *tail;
+                        double theta = av_strtod(val, &tail);
+                        if (!*tail) {
+                            ost->rotate_overridden = 1;
+                            ost->rotate_override_value = theta;
+                        }
+                    } else {
+                        av_dict_set(&oc->streams[j]->metadata, o->metadata[i].u.str, *val ? val : NULL, 0);
                     }
                 } else if (ret < 0)
                     exit_program(1);
@@ -3291,12 +3271,7 @@ int ffmpeg_parse_options(int argc, char **argv)
         goto fail;
     }
 
-    /* configure the complex filtergraphs */
-    ret = configure_complex_filters();
-    if (ret < 0) {
-        av_log(NULL, AV_LOG_FATAL, "Error configuring complex filters.\n");
-        goto fail;
-    }
+    check_filter_outputs();
 
 fail:
     uninit_parse_context(&octx);
@@ -3327,7 +3302,7 @@ static int opt_progress(void *optctx, const char *opt, const char *arg)
 #define OFFSET(x) offsetof(OptionsContext, x)
 const OptionDef options[] = {
     /* main options */
-#include "cmdutils_common_opts.h"
+    CMDUTILS_COMMON_OPTIONS
     { "f",              HAS_ARG | OPT_STRING | OPT_OFFSET |
                         OPT_INPUT | OPT_OUTPUT,                      { .off       = OFFSET(format) },
         "force format", "fmt" },
@@ -3665,6 +3640,11 @@ const OptionDef options[] = {
 
     { "time_base", HAS_ARG | OPT_STRING | OPT_EXPERT | OPT_SPEC | OPT_OUTPUT, { .off = OFFSET(time_bases) },
         "set the desired time base hint for output stream (1:24, 1:48000 or 0.04166, 2.0833e-5)", "ratio" },
+    { "enc_time_base", HAS_ARG | OPT_STRING | OPT_EXPERT | OPT_SPEC | OPT_OUTPUT, { .off = OFFSET(enc_time_bases) },
+        "set the desired time base for the encoder (1:24, 1:48000 or 0.04166, 2.0833e-5). "
+        "two special values are defined - "
+        "0 = use frame rate (video) or sample rate (audio),"
+        "-1 = match source time base", "ratio" },
 
     { "bsf", HAS_ARG | OPT_STRING | OPT_SPEC | OPT_EXPERT | OPT_OUTPUT, { .off = OFFSET(bitstream_filters) },
         "A comma-separated list of bitstream filters", "bitstream_filters" },

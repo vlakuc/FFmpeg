@@ -652,13 +652,13 @@ static void chs_filter_band_data(DCAXllDecoder *s, DCAXllChSet *c, int band)
                 int64_t err = 0;
                 for (k = 0; k < order; k++)
                     err += (int64_t)buf[j + k] * coeff[order - k - 1];
-                buf[j + k] -= clip23(norm16(err));
+                buf[j + k] -= (SUINT)clip23(norm16(err));
             }
         } else {
             // Inverse fixed coefficient prediction
             for (j = 0; j < b->fixed_pred_order[i]; j++)
                 for (k = 1; k < nsamples; k++)
-                    buf[k] += buf[k - 1];
+                    buf[k] += (unsigned)buf[k - 1];
         }
     }
 
@@ -1308,11 +1308,11 @@ static int combine_residual_frame(DCAXllDecoder *s, DCAXllChSet *c)
             // Undo embedded core downmix pre-scaling
             int scale_inv = o->dmix_scale_inv[c->hier_ofs + ch];
             for (n = 0; n < nsamples; n++)
-                dst[n] += clip23((mul16(src[n], scale_inv) + round) >> shift);
+                dst[n] += (SUINT)clip23((mul16(src[n], scale_inv) + round) >> shift);
         } else {
             // No downmix scaling
             for (n = 0; n < nsamples; n++)
-                dst[n] += (src[n] + round) >> shift;
+                dst[n] += (unsigned)((src[n] + round) >> shift);
         }
     }
 

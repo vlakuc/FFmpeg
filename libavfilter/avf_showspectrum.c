@@ -48,7 +48,7 @@ enum ColorMode    { CHANNEL, INTENSITY, RAINBOW, MORELAND, NEBULAE, FIRE, FIERY,
 enum SlideMode    { REPLACE, SCROLL, FULLFRAME, RSCROLL, NB_SLIDES };
 enum Orientation  { VERTICAL, HORIZONTAL, NB_ORIENTATIONS };
 
-typedef struct {
+typedef struct ShowSpectrumContext {
     const AVClass *class;
     int w, h;
     AVFrame *outpicref;
@@ -299,6 +299,8 @@ static int config_output(AVFilterLink *outlink)
     int i, fft_bits, h, w;
     float overlap;
 
+    s->pts = AV_NOPTS_VALUE;
+
     if (!strcmp(ctx->filter->name, "showspectrumpic"))
         s->single_pic = 1;
 
@@ -426,7 +428,7 @@ static int config_output(AVFilterLink *outlink)
             memset(outpicref->data[1] + i * outpicref->linesize[1], 128, outlink->w);
             memset(outpicref->data[2] + i * outpicref->linesize[2], 128, outlink->w);
         }
-        av_frame_set_color_range(outpicref, AVCOL_RANGE_JPEG);
+        outpicref->color_range = AVCOL_RANGE_JPEG;
     }
 
     if ((s->orientation == VERTICAL   && s->xpos >= s->w) ||

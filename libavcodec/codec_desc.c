@@ -170,6 +170,14 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .props     = AV_CODEC_PROP_LOSSY,
     },
     {
+        .id        = AV_CODEC_ID_SVG,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "svg",
+        .long_name = NULL_IF_CONFIG_SMALL("Scalable Vector Graphics"),
+        .props     = AV_CODEC_PROP_LOSSLESS,
+        .mime_types= MT("image/svg+xml"),
+    },
+    {
         .id        = AV_CODEC_ID_SVQ1,
         .type      = AVMEDIA_TYPE_VIDEO,
         .name      = "svq1",
@@ -520,7 +528,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_VIDEO,
         .name      = "fraps",
         .long_name = NULL_IF_CONFIG_SMALL("Fraps"),
-        .props     = AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_TRUEMOTION2,
@@ -1360,6 +1368,48 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("FM Screen Capture Codec"),
         .props     = AV_CODEC_PROP_LOSSLESS,
     },
+    {
+        .id        = AV_CODEC_ID_SCPR,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "scpr",
+        .long_name = NULL_IF_CONFIG_SMALL("ScreenPressor"),
+        .props     = AV_CODEC_PROP_LOSSLESS | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_CLEARVIDEO,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "clearvideo",
+        .long_name = NULL_IF_CONFIG_SMALL("Iterated Systems ClearVideo"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_AV1,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "av1",
+        .long_name = NULL_IF_CONFIG_SMALL("Alliance for Open Media AV1"),
+        .props     = AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_BITPACKED,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "bitpacked",
+        .long_name = NULL_IF_CONFIG_SMALL("Bitpacked"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_MSCC,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "mscc",
+        .long_name = NULL_IF_CONFIG_SMALL("Mandsoft Screen Capture Codec"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_SRGC,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "srgc",
+        .long_name = NULL_IF_CONFIG_SMALL("Screen Recorder Gold Codec"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
 
     /* image codecs */
     {
@@ -1575,6 +1625,15 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "xbm",
         .long_name = NULL_IF_CONFIG_SMALL("XBM (X BitMap) image"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+        .mime_types= MT("image/x-xbitmap"),
+    },
+    {
+        .id        = AV_CODEC_ID_XPM,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "xpm",
+        .long_name = NULL_IF_CONFIG_SMALL("XPM (X PixMap) image"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+        .mime_types= MT("image/x-xpixmap"),
     },
     {
         .id        = AV_CODEC_ID_XWD,
@@ -2283,7 +2342,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "flac",
         .long_name = NULL_IF_CONFIG_SMALL("FLAC (Free Lossless Audio Codec)"),
-        .props     = AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_MP3ADU,
@@ -2311,7 +2370,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "alac",
         .long_name = NULL_IF_CONFIG_SMALL("ALAC (Apple Lossless Audio Codec)"),
-        .props     = AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_WESTWOOD_SND1,
@@ -2353,7 +2412,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "tta",
         .long_name = NULL_IF_CONFIG_SMALL("TTA (True Audio)"),
-        .props     = AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_SMACKAUDIO,
@@ -2374,7 +2433,8 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "wavpack",
         .long_name = NULL_IF_CONFIG_SMALL("WavPack"),
-        .props     = AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY |
+                     AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_DSICINAUDIO,
@@ -2682,7 +2742,7 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "tak",
         .long_name = NULL_IF_CONFIG_SMALL("TAK (Tom's lossless Audio Kompressor)"),
-        .props     = AV_CODEC_PROP_LOSSLESS,
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
     },
     {
         .id        = AV_CODEC_ID_METASOUND,
