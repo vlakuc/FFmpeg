@@ -1,5 +1,25 @@
-#ifndef CIRCULAR_BUFFER_H
-#define CIRCULAR_BUFFER_H
+/*
+ * Copyright (c) 2017 Epiphan Systems Inc. All rights reserved.
+ *
+ * This file is part of FFmpeg.
+ *
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * FFmpeg is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
+#ifndef AVUTIL_CIRCULAR_BUFFER_H
+#define AVUTIL_CIRCULAR_BUFFER_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -132,4 +152,4 @@ void av_circular_buffer_get_data(const AVCircularBuffer* context, int64_t* data,
  */
 int av_circular_buffer_at(const AVCircularBuffer* context, size_t position, int64_t* value);
 
-#endif /* CIRCULAR_BUFFER_H */
+#endif /* AVUTIL_CIRCULAR_BUFFER_H */
