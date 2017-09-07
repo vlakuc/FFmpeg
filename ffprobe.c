@@ -2213,11 +2213,14 @@ static int show_stream(WriterContext *w, AVFormatContext *fmt_ctx, int stream_id
     s = av_get_media_type_string(par->codec_type);
     if (s) print_str    ("codec_type", s);
     else   print_str_opt("codec_type", "unknown");
-#if FF_API_LAVF_AVCTX
+
     if (dec_ctx)
+    {
+#if FF_API_LAVF_AVCTX
         print_q("codec_time_base", dec_ctx->time_base, '/');
 #endif
         print_int("codec_ticks_per_frame",dec_ctx->ticks_per_frame); 
+    }
 
     /* print AVI/FourCC tag */
     av_get_codec_tag_string(val_str, sizeof(val_str), par->codec_tag);

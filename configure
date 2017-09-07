@@ -5967,8 +5967,9 @@ if enabled libcdio; then
     die "ERROR: No usable libcdio/cdparanoia found"
 fi
 
-enabled_any shmem_indev shmem_outdev &&
+if enabled_any shmem_indev shmem_outdev; then
     check_lib2 libshm/libshm.h shm_reader_open -lshm || die "ERROR: libshm not found"
+fi
 
 enabled xlib &&
     check_lib X11/Xlib.h XOpenDisplay -lX11 || disable xlib
@@ -6066,7 +6067,7 @@ EOF
 disabled iconv || check_func_headers iconv.h iconv || check_lib2 iconv.h iconv -liconv || disable iconv
 disabled sysinfo || check_func_headers "stdint.h sysinfo/sysinfo.h" sysinfo_get_string -lsysinfo || disable sysinfo
 disabled sysinfo || enable sysinfo
-enabled sysinfo && prepend ffmpeg_libs $($ldflags_filter "-lsysinfo")
+enabled sysinfo && prepend ffmpeg_libs $($ldflags_filter "-lsysinfo") && add_extralibs -lsysinfo
 
 
 enabled debug && add_cflags -g"$debuglevel" && add_asflags -g"$debuglevel"

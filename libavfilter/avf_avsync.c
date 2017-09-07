@@ -23,6 +23,7 @@
 #include "libavutil/avassert.h"
 #include "libavutil/opt.h"
 #include "libavutil/avstring.h"
+#include "libavutil/bprint.h"
 #include "libswresample/swresample.h"
 
 #include "libavcodec/avcodec.h"
@@ -32,6 +33,11 @@
 #include "avsync_utils.h"
 #include "content_sync_detector.h"
 
+#if CONFIG_SYSINFO
+#include <sysinfo/sysinfo.h>
+#endif //CONFIG_SYSINFO
+
+
 #define TYPE_ALL 2
 
 typedef struct {
@@ -40,10 +46,11 @@ typedef struct {
 } StreamInfo;
 
 typedef struct {
-    int x,y;
-    float width, height; // width and height may be set to value less then 1 but greater then 0,
-                         // in this case their value treated as a fraction of frame.width/frame.height 
-} VideoROI;
+    int64_t packet_counter;
+    float avg_lipsync;
+    float lipsync; // current value
+    float norm_lipsync; // current normalized value
+} AVSyncStat;
 
 typedef struct {
     const AVClass *class;
@@ -51,14 +58,16 @@ typedef struct {
     int master_stream;
     char* output_file_str;
     FILE* output_file;
-    char* v_roi_str;
     int threshold;
-    VideoROI* v_roi;
+    unsigned char compact_format;
+    char* sysinfo_path;
     int64_t first_frame_time;
     content_sync_detector_ctx_t* csd_ctx;
     SwrContext** sw_resamplers;
     int* frame_values;
     StreamInfo* stream_info;
+    AVSyncStat* avsync_stat;
+
 } AVSyncContext;
 
 
@@ -75,15 +84,31 @@ static const AVOption avsync_options[] = {
     { "m",      "master stream index. Metrics of other streams are compared against master stream", OFFSET(master_stream), AV_OPT_TYPE_INT, { .i64 = 0 }, 0, INT_MAX, FLAGS},
     { "output", "output to given file or to stdout", OFFSET(output_file_str), AV_OPT_TYPE_STRING, { .str = "-" }, CHAR_MIN, CHAR_MAX, FLAGS},
     { "o",      "output to given file or to stdout", OFFSET(output_file_str), AV_OPT_TYPE_STRING, { .str = "-" }, CHAR_MIN, CHAR_MAX, FLAGS},
-    { "v_roi", "video regions of interest", OFFSET(v_roi_str), AV_OPT_TYPE_STRING, { .str = NULL }, CHAR_MIN, CHAR_MAX, FLAGS},
-    { "r",     "video regions of interest", OFFSET(v_roi_str), AV_OPT_TYPE_STRING, { .str = NULL }, CHAR_MIN, CHAR_MAX, FLAGS},
     { "threshold", "frame charactersistic threshold", OFFSET(threshold), AV_OPT_TYPE_INT, { .i64 = 10 }, 0, 100, FLAGS},
     { "t",         "frame charactersistic threshold", OFFSET(threshold), AV_OPT_TYPE_INT, { .i64 = 10 }, 0, 100, FLAGS},
+    { "compact_format", "output only lipsync values",  OFFSET(compact_format),      AV_OPT_TYPE_BOOL,   {.i64 = 0    }, 0,  1, FLAGS },
+    { "sysinfo", "output to sysinfo path (works with compact_format options only)", OFFSET(sysinfo_path), AV_OPT_TYPE_STRING, { .str = NULL }, CHAR_MIN, CHAR_MAX, FLAGS},
     { NULL }
 };
 
 
 AVFILTER_DEFINE_CLASS(avsync);
+
+
+static void sysinfo_writer(AVFilterContext *ctx, const char* path, const char* value)
+{
+#if CONFIG_SYSINFO
+    
+    if (!path || !value ) {
+        av_log(ctx, AV_LOG_ERROR, "path or value is not specified.\n");
+    }
+    else {
+        sysinfo_set_string(path, value);
+    }
+#else
+    av_log(ctx, AV_LOG_ERROR, "output to sysinfo is not supported.\n");
+#endif //CONFIG_SYSINFO
+}
 
 
 static void print_frame_time(AVFilterContext* ctx)
@@ -124,7 +149,6 @@ static void print_frame_characteristic(AVFilterContext *ctx)
     fprintf(avs->output_file, "values: ");
 
     for( i = 0; i < ctx->nb_inputs; ++i ) {
-			
         if( comma_needed )
             fprintf(avs->output_file, ", ");
 			
@@ -148,10 +172,33 @@ static void print_lipsync(AVFilterContext *ctx)
         fprintf(avs->output_file, "[%d:%u]:%0.3f\t",
                 avs->master_stream,
                 i,
-                content_sync_get_diff(avs->csd_ctx, i, avs->master_stream) );
+                avs->avsync_stat[i].lipsync);
     }
     fprintf(avs->output_file, "\n"); 
 }
+
+static void print_lipsync_compact(AVFilterContext *ctx)
+{
+    AVSyncContext *avs = ctx->priv;
+    unsigned i;
+    char* lipsync_str = NULL;
+    unsigned char need_comma = 0;
+    
+    struct AVBPrint bprint;
+    av_bprint_init(&bprint, 0, AV_BPRINT_SIZE_AUTOMATIC);
+
+    for (i = 0; i < ctx->nb_inputs; i++) {
+        if (i == avs->master_stream) continue;
+        if (need_comma) {
+            av_bprintf(&bprint, ",");
+        }
+        av_bprintf(&bprint,  "%0.3f", avs->avsync_stat[i].norm_lipsync);
+        need_comma = 1;
+    }
+    av_bprint_finalize(&bprint, &lipsync_str);
+    sysinfo_writer(ctx, avs->sysinfo_path, lipsync_str);
+}
+
 
 
 static int get_loudness(AVSyncContext* ctx, AVFrame* frame, int index)
@@ -200,65 +247,6 @@ static int get_loudness(AVSyncContext* ctx, AVFrame* frame, int index)
 }
 
 
-/**
- * Video region of interest (ROI) is specified using following pattern:
- *     stream_index@(x,y,width,height)
- * E.g. 0@(0,0,100,100)
- *      0@(0,0,100,100);1@(10,10,100,100)
- */
-
-static int parse_video_roi(AVFilterContext* ctx)
-{
-    AVSyncContext *avs = ctx->priv;
-    char *arg,
-        *tokenizer,
-        *p,
-        *args = av_strdup(avs->v_roi_str);
-    unsigned input_index = 0;
-    int res = 0;
-    
-    av_assert0(avs->v_roi != NULL);
-
-    p = args;
-
-    do {
-        while (arg = av_strtok(p, ";", &tokenizer)) {
-            const char *c = arg;
-            VideoROI roi = {0};
-            const unsigned required_matches = 5;
-            p = NULL; // for subsequent av_strtok calls
-            
-            if (sscanf(c, "%u@(%d,%d,%f,%f)",
-                       &input_index,
-                       &roi.x, &roi.y, &roi.width, &roi.height) < required_matches) {
-                av_log(ctx, AV_LOG_ERROR, "Specified Video ROI doesn't match format idx@(x,y,w,h)\n");
-                res = AVERROR(EINVAL);
-                break;
-            }
-
-            if (input_index >= ctx->nb_inputs || ctx->input_pads[input_index].type != AVMEDIA_TYPE_VIDEO) {
-                av_log(ctx, AV_LOG_ERROR, "stream index in specified Video ROI \"%s\" is out of range\n", arg);
-                res = AVERROR(EINVAL);
-                break;
-            }
-
-            if (roi.x < 0 || roi.y < 0 || roi.width < 0 || roi.height < 0) {
-                av_log(ctx, AV_LOG_ERROR, "Video ROI is out of range\n");
-                res = AVERROR(EINVAL);
-                break;
-            }
-            
-            avs->v_roi[input_index] = roi;
-        }
-    }
-    while (0);
-        
-    av_free(args);
-
-    return res;
-}
-
-
 static int config_output(AVFilterLink *outlink)
 {
     AVFilterContext *ctx = outlink->src;
@@ -275,6 +263,25 @@ static int config_output(AVFilterLink *outlink)
 }
 
 
+static void update_avsync_stat( AVFilterContext *ctx )
+{
+    AVSyncContext *avs = ctx->priv;
+    AVSyncStat *stat = avs->avsync_stat;
+
+
+    for( unsigned i = 0; i < ctx->nb_inputs; ++i ) {
+        if (i == avs->master_stream) continue;			
+        stat[i].lipsync = content_sync_get_diff(avs->csd_ctx, i, avs->master_stream);
+        stat[i].norm_lipsync = (fabs(LIPSYNC_UNDEFINED - stat[i].lipsync) < 0.001) ? stat[i].avg_lipsync : stat[i].lipsync;
+        
+        // cumulative average
+        stat[i].avg_lipsync = (stat[i].norm_lipsync + stat[i].avg_lipsync * stat[i].packet_counter) / (stat[i].packet_counter + 1);
+        stat[i].packet_counter++;
+    }
+}
+
+
+
 static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 {
     AVFilterContext *avf_ctx = inlink->dst;
@@ -288,19 +295,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
     avs_ctx->stream_info[idx].time_base = inlink->time_base;
     
     if (avf_ctx->input_pads[idx].type == AVMEDIA_TYPE_VIDEO) {
-        rect_t rect = {0};
-        if (avs_ctx->v_roi) {
-            if (avs_ctx->v_roi[idx].width < 1.0) {
-                avs_ctx->v_roi[idx].width = avs_ctx->v_roi[idx].width * frame->width;
-            }
-            if (avs_ctx->v_roi[idx].height < 1.0) {
-                avs_ctx->v_roi[idx].height = avs_ctx->v_roi[idx].height *frame->height;
-            }
-            rect = MAKE_RECT(avs_ctx->v_roi[idx].x, avs_ctx->v_roi[idx].y,
-                             avs_ctx->v_roi[idx].width, avs_ctx->v_roi[idx].height);
-        }
-        
-        value = get_average_color_of_image(frame, frame->width, frame->height, rect);
+        value = get_average_color_of_image(frame, frame->width, frame->height);
     }
     else {
         value = get_loudness(avs_ctx, frame, idx);
@@ -312,11 +307,19 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
         content_sync_write( avs_ctx->csd_ctx, idx, decoded_pts, avs_ctx->frame_values[idx] );
     }
 
-    print_frame_time(avf_ctx);
-    print_timestamps(avf_ctx, idx);
-    print_frame_characteristic(avf_ctx);
-    print_lipsync(avf_ctx);
+
+    update_avsync_stat(avf_ctx);
     
+    if (avs_ctx->compact_format) {
+        print_lipsync_compact(avf_ctx);
+    }
+    else {
+        print_frame_time(avf_ctx);
+        print_timestamps(avf_ctx, idx);
+        print_frame_characteristic(avf_ctx);
+        print_lipsync(avf_ctx);
+    }
+
     return ff_filter_frame(avf_ctx->outputs[idx], frame);
 }
 
@@ -377,13 +380,23 @@ static av_cold int init(AVFilterContext *ctx)
         avs_ctx->stream_info[i].pts = AV_NOPTS_VALUE;
     }
 
+    avs_ctx->avsync_stat = av_calloc(ctx->nb_inputs, sizeof(AVSyncStat));
+    if (!avs_ctx->avsync_stat) return AVERROR(ENOMEM);
+
+    for (i = 0; i < ctx->nb_inputs; i++) {
+        avs_ctx->avsync_stat[i].packet_counter = 0;
+        avs_ctx->avsync_stat[i].avg_lipsync = 0.0;
+        avs_ctx->avsync_stat[i].lipsync = 0.0;
+    }
+    
     if (ctx->nb_inputs <= avs_ctx->master_stream) {
         av_log(ctx, AV_LOG_ERROR, "index (%d) of master stream is out of range (0:%d)\n",
                avs_ctx->master_stream, ctx->nb_inputs);
         return AVERROR(EINVAL);
     }
 
-    if (avs_ctx->output_file_str) {
+
+    if (!avs_ctx->compact_format && avs_ctx->output_file_str) {
         if (!strcmp(avs_ctx->output_file_str, "-")) {
             avs_ctx->output_file = stdout;
         }
@@ -400,18 +413,6 @@ static av_cold int init(AVFilterContext *ctx)
         }
     }
     
-    if (avs_ctx->v_roi_str) {
-        int res;
-        avs_ctx->v_roi = av_calloc(ctx->nb_inputs, sizeof(VideoROI));
-        if (!ctx->nb_inputs) return AVERROR(ENOMEM);
-        
-        res = parse_video_roi(ctx);
-        if (res) {
-            av_log(ctx, AV_LOG_ERROR, "failed to parse Video ROI");
-            return res;
-        }
-    }
-
     avs_ctx->csd_ctx = content_sync_detector_create(ctx->nb_inputs,  avs_ctx->threshold);
     if (avs_ctx->csd_ctx == NULL)
         return AVERROR(ENOMEM);
@@ -432,6 +433,7 @@ static av_cold void uninit(AVFilterContext *ctx)
     av_free(avs_ctx->sw_resamplers);
     av_free(avs_ctx->frame_values);
     av_free(avs_ctx->stream_info);
+    av_free(avs_ctx->avsync_stat);
 
     for (i = 0; i < ctx->nb_inputs; ++i) {
         av_freep(&ctx->input_pads[i].name);
@@ -443,8 +445,6 @@ static av_cold void uninit(AVFilterContext *ctx)
     if (avs_ctx->output_file && avs_ctx->output_file != stdout) {
         fclose(avs_ctx->output_file);
     }
-
-    av_free(avs_ctx->v_roi);
 }
 
 

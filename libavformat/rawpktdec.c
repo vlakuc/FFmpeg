@@ -136,6 +136,8 @@ static int raw_read_trackinfo(AVIOContext *pb, int len, AVStream *st)
 
     st->avg_frame_rate.num = avio_rl32(pb);
     st->avg_frame_rate.den = avio_rl32(pb);
+    st->r_frame_rate.num = avio_rl32(pb);
+    st->r_frame_rate.den = avio_rl32(pb);
 
     while(avio_tell(pb) < end) {
         read_tag_header(pb,&tag,&param,&size);

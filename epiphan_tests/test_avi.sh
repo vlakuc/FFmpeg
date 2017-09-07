@@ -36,10 +36,10 @@ setup()
         local output_filename="h264_${audio_codec}_original.avi"
         local output_restructed_filename="h264_${audio_codec}_restructed.avi"
 
-        ffmpeg -i $LOCAL_TEST_PATH/$input_filename -acodec copy -vcodec copy $SANDBOX_PATH/$output_filename 2> /dev/null
+        ffmpeg -threads 1 -i $LOCAL_TEST_PATH/$input_filename -acodec copy -vcodec copy $SANDBOX_PATH/$output_filename 2> /dev/null
         test_status "Setup. Audio codec: ${audio_codec}. Base muxing to avi"
 
-        ffmpeg -i $LOCAL_TEST_PATH/$input_cut_filename -acodec copy -vcodec copy $SANDBOX_PATH/$output_restructed_filename 2> /dev/null
+        ffmpeg -threads 1 -i $LOCAL_TEST_PATH/$input_cut_filename -acodec copy -vcodec copy $SANDBOX_PATH/$output_restructed_filename 2> /dev/null
         test_status "Setup. Audio codec: ${audio_codec}. Muxing to avi with silence reconstruction"
 
     done

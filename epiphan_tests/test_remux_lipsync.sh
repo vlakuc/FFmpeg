@@ -56,7 +56,7 @@ remux()
 	    ;;
     esac
 
-    ffmpeg -i $LIPSYNC_IN $flags -c:a $acodec -c:v copy $SANDBOX_PATH/$fname >& /dev/null
+    ffmpeg -threads 1 -i $LIPSYNC_IN $flags -c:a $acodec -c:v copy $SANDBOX_PATH/$fname >& /dev/null
 
     [ -s $SANDBOX_PATH/$fname ]
     test_status "Remuxing [$acodec] [$cont]"

@@ -27,6 +27,8 @@
 #include "avformat.h"
 #include "movenccenc.h"
 
+#include "libavcodec/h264_constrate_filter.h"
+
 #define MOV_FRAG_INFO_ALLOC_INCREMENT 64
 #define MOV_INDEX_CLUSTER_SIZE 1024
 #define MOV_TIMESCALE 1000
@@ -162,6 +164,9 @@ typedef struct MOVTrack {
     int pal_done;
 
     int is_unaligned_qt_rgb;
+
+    H264ConstRateContext* h264_constrate_filter; ///< H264 Constant Video Frame Rate filter 
+
 } MOVTrack;
 
 typedef enum {
@@ -260,6 +265,7 @@ typedef struct MOVMuxContext {
 #define FF_MOV_FLAG_DURATION_UPDATE       (1 << 17)
 #define FF_MOV_FLAG_FRAG_BUILD_MOOV       (1 << 18)
 #define FF_MOV_FLAG_USE_MDTA              (1 << 19)
+#define FF_MOV_FLAG_CONST_VIDEORATE       (1 << 20)  ///< Try to achieve constant video frame rate for H.264 bitstream
 
 int ff_mov_write_packet(AVFormatContext *s, AVPacket *pkt);
 

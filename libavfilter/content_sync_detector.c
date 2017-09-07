@@ -110,5 +110,5 @@ float content_sync_get_diff( content_sync_detector_ctx_t* ctx, unsigned int trac
     if( track_a->state == track_b->state && track_a->state != CONTENT_UNDEFINED )
         return (track_a->state_switch_time - track_b->state_switch_time) / 1000000.0;
     else
-        return 1110.0f;
+        return LIPSYNC_UNDEFINED;
 }

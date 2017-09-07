@@ -52,7 +52,7 @@ encode_stream()
     local in_file="${1}"
     local out_file="${2}"
     local fmt="${3}"
-    ffmpeg -loglevel panic -i $in_file -c:a copy -c:v copy -f $fmt $out_file
+    ffmpeg -threads 1 -loglevel panic -i $in_file -c:a copy -c:v copy -f $fmt $out_file
 }
 
 

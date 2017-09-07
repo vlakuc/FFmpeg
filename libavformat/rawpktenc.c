@@ -133,6 +133,8 @@ static int raw_write_trackinfo(AVIOContext *pb0,AVStream *st)
 
     avio_wl32(pb, st->avg_frame_rate.num);
     avio_wl32(pb, st->avg_frame_rate.den);
+    avio_wl32(pb, st->r_frame_rate.num);
+    avio_wl32(pb, st->r_frame_rate.den);
 
     err = raw_write_codec(pb, st->codecpar);
     if(err == 0) {

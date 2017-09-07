@@ -10,14 +10,14 @@
 # Video track 0:4 contains dynamic picture generated fith "life" filter with two rectangular areas in top left corner and bottom right corner where 5/5sec blue/white pattern in displayed.
 
 # Command to generate black_white pattern:
-# ffmpeg -f lavfi -i color=c=white:size=vga:duration=5:rate=60 -f lavfi -i color=c=black:size=vga:duration=5:rate=60 -i /extra/video/tone.wav -i /extra/video/silence.wav -t 10         -filter_complex "[1:v][3:a][0:v][2:a]concat=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v libx264 -c:a aac black_white.mp4
+# ffmpeg -threads 1 -f lavfi -i color=c=white:size=vga:duration=5:rate=60 -f lavfi -i color=c=black:size=vga:duration=5:rate=60 -i /extra/video/tone.wav -i /extra/video/silence.wav -t 10         -filter_complex "[1:v][3:a][0:v][2:a]concat=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v libx264 -c:a aac black_white.mp4
 
 # Command to generate blue_yellow pattern:
-# ffmpeg -f lavfi -i color=c=yellow:size=qvga:duration=5:rate=60 -f lavfi -i color=c=blue:size=qvga:duration=5:rate=60 -i /extra/video/sawtooth.wav -i /extra/video/quiet_noise.wav -t 10  -filter_complex "[1:v][3:a][0:v][2:a]concat=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v libx264 -c:a aac yellow_blue.mp4
+# ffmpeg -threads 1 -f lavfi -i color=c=yellow:size=qvga:duration=5:rate=60 -f lavfi -i color=c=blue:size=qvga:duration=5:rate=60 -i /extra/video/sawtooth.wav -i /extra/video/quiet_noise.wav -t 10  -filter_complex "[1:v][3:a][0:v][2:a]concat=2:v=1:a=1[v][a]" -map "[v]" -map "[a]" -c:v libx264 -c:a aac yellow_blue.mp4
 
 
 # Command to generate video ROI track:
-# ffmpeg -f lavfi -i life=s=vga:mold=10:r=60:ratio=0.1:death_color=#C83232:life_color=#00ff00,scale=1200:800:flags=16 -f lavfi -i color=c=blue:size=200x200:duration=5:rate=60 -f lavfi -i color=c=white:size=200x200:duration=5:rate=60  -t 10 -filter_complex "[1:0][2:0]concat[out], [out]split[v1][v2], [0:0][v1]overlay=x=10:y=10[out2], [out2][v2]overlay=x=main_w-overlay_w-10:y=main_h-overlay_h-10"  -c:v libx264 video_roi.mp4
+# ffmpeg -threads 1 -f lavfi -i life=s=vga:mold=10:r=60:ratio=0.1:death_color=#C83232:life_color=#00ff00,scale=1200:800:flags=16 -f lavfi -i color=c=blue:size=200x200:duration=5:rate=60 -f lavfi -i color=c=white:size=200x200:duration=5:rate=60  -t 10 -filter_complex "[1:0][2:0]concat[out], [out]split[v1][v2], [0:0][v1]overlay=x=10:y=10[out2], [out2][v2]overlay=x=main_w-overlay_w-10:y=main_h-overlay_h-10"  -c:v libx264 video_roi.mp4
 
 
 # Command to combine all tracks together:

@@ -53,6 +53,7 @@
 #include "mov_chan.h"
 #include "vpcc.h"
 
+
 static const AVOption options[] = {
     { "movflags", "MOV muxer flags", offsetof(MOVMuxContext, flags), AV_OPT_TYPE_FLAGS, {.i64 = 0}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
     { "rtphint", "Add RTP hint tracks", 0, AV_OPT_TYPE_CONST, {.i64 = FF_MOV_FLAG_RTP_HINT}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
@@ -75,6 +76,7 @@ static const AVOption options[] = {
     { "write_colr", "Write colr atom (Experimental, may be renamed or changed, do not use from scripts)", 0, AV_OPT_TYPE_CONST, {.i64 = FF_MOV_FLAG_WRITE_COLR}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
     { "write_gama", "Write deprecated gama atom", 0, AV_OPT_TYPE_CONST, {.i64 = FF_MOV_FLAG_WRITE_GAMA}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
     { "use_metadata_tags", "Use mdta atom for metadata.", 0, AV_OPT_TYPE_CONST, {.i64 = FF_MOV_FLAG_USE_MDTA}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
+    { "const_vrate", "Constant video frame rate", 0, AV_OPT_TYPE_CONST, {.i64 = FF_MOV_FLAG_CONST_VIDEORATE}, INT_MIN, INT_MAX, AV_OPT_FLAG_ENCODING_PARAM, "movflags" },
     FF_RTP_FLAG_OPTS(MOVMuxContext, rtp_flags),
     { "skip_iods", "Skip writing iods atom.", offsetof(MOVMuxContext, iods_skip), AV_OPT_TYPE_BOOL, {.i64 = 1}, 0, 1, AV_OPT_FLAG_ENCODING_PARAM},
     { "iods_audio_profile", "iods audio profile atom.", offsetof(MOVMuxContext, iods_audio_profile), AV_OPT_TYPE_INT, {.i64 = -1}, -1, 255, AV_OPT_FLAG_ENCODING_PARAM},
@@ -4619,7 +4621,9 @@ static int mov_flush_fragment(AVFormatContext *s, int force)
         track->track_duration += get_cluster_duration(track, track->entry - 2);
         track->end_pts        += get_cluster_duration(track, track->entry - 2);
         if (!mov->missing_duration_warned) {
-            av_log(s, AV_LOG_WARNING,
+            // Logging level is reduced for the firmware 4.4.0
+            //  Further versions should consider to properly set packet duration
+            av_log(s, AV_LOG_DEBUG,
                    "Estimating the duration of the last packet in a "
                    "fragment, consider setting the duration field in "
                    "AVPacket instead.\n");
@@ -5292,6 +5296,34 @@ fail:
             }
         }
 
+        if (trk->h264_constrate_filter) {
+            // H.264 bitstream constant video frame rate filter
+            int ret = av_h264_constrate_send_packet(trk->h264_constrate_filter, pkt);
+            if (ret < 0)
+                return ret;
+            // Drain filter
+            do {
+                AVPacket pkt1;
+                av_init_packet(&pkt1);
+                pkt1.data = NULL;
+                pkt1.size = 0;
+
+                ret = av_h264_constrate_receive_packet(trk->h264_constrate_filter, &pkt1);
+                if (ret == AVERROR(EAGAIN))
+                    break;
+                if (ret < 0)
+                    return ret;
+
+                ret = mov_write_single_packet(s, &pkt1);
+                av_packet_unref(&pkt1);
+                if (ret < 0)
+                    return ret;
+
+            } while(1);
+            return 0;
+        }
+        
+        // Generic processing            
         return mov_write_single_packet(s, pkt);
     }
 }
@@ -5518,6 +5550,8 @@ static void mov_free(AVFormatContext *s)
             av_freep(&mov->tracks[i].vos_data);
 
         ff_mov_cenc_free(&mov->tracks[i].cenc);
+
+        av_h264_constrate_free(&mov->tracks[i].h264_constrate_filter);
     }
 
     av_freep(&mov->tracks);
@@ -5878,6 +5912,23 @@ static int mov_init(AVFormatContext *s)
             track->timescale = 10000000;
 
         avpriv_set_pts_info(st, 64, 1, track->timescale);
+
+        if (track->par->codec_type == AVMEDIA_TYPE_VIDEO && 
+            track->par->codec_id   == AV_CODEC_ID_H264   && 
+            mov->flags & FF_MOV_FLAG_CONST_VIDEORATE) {
+#if FF_API_R_FRAME_RATE
+            AVRational frame_rate = st->r_frame_rate;
+#else
+            AVRational frame_rate = st->avg_frame_rate;           
+#endif 
+            ret = av_h264_constrate_create(&track->h264_constrate_filter, track->par, st->time_base, frame_rate, s);
+            if (ret < 0) {
+                if (ret != AVERROR_INVALIDDATA)
+                    return ret;
+                // Allow to continue without filter if a bitstream does not meet requirements
+                av_log(s, AV_LOG_WARNING, "track %d: cannot use H.264 constant video rate filter\n", i);
+            }
+        }
 
         if (mov->encryption_scheme == MOV_ENC_CENC_AES_CTR) {
             ret = ff_mov_cenc_init(&track->cenc, mov->encryption_key,

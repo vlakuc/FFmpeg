@@ -455,7 +455,7 @@ int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
     }
 
     sps->ref_frame_count = get_ue_golomb_31(gb);
-    if (avctx->codec_tag == MKTAG('S', 'M', 'V', '2'))
+    if (avctx && avctx->codec_tag == MKTAG('S', 'M', 'V', '2'))
         sps->ref_frame_count = FFMAX(2, sps->ref_frame_count);
     if (sps->ref_frame_count > MAX_DELAYED_PIC_COUNT) {
         av_log(avctx, AV_LOG_ERROR,
@@ -496,7 +496,7 @@ int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
         int width  = 16 * sps->mb_width;
         int height = 16 * sps->mb_height * (2 - sps->frame_mbs_only_flag);
 
-        if (avctx->flags2 & AV_CODEC_FLAG2_IGNORE_CROP) {
+        if (avctx && avctx->flags2 & AV_CODEC_FLAG2_IGNORE_CROP) {
             av_log(avctx, AV_LOG_DEBUG, "discarding sps cropping, original "
                                            "values are l:%d r:%d t:%d b:%d\n",
                    crop_left, crop_right, crop_top, crop_bottom);
@@ -513,7 +513,7 @@ int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
             int step_y = (2 - sps->frame_mbs_only_flag) << vsub;
 
             if (crop_left & (0x1F >> (sps->bit_depth_luma > 8)) &&
-                !(avctx->flags & AV_CODEC_FLAG_UNALIGNED)) {
+                !(avctx && avctx->flags & AV_CODEC_FLAG_UNALIGNED)) {
                 crop_left &= ~(0x1F >> (sps->bit_depth_luma > 8));
                 av_log(avctx, AV_LOG_WARNING,
                        "Reducing left cropping to %d "
@@ -562,7 +562,7 @@ int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
     /* if the maximum delay is not stored in the SPS, derive it based on the
      * level */
     if (!sps->bitstream_restriction_flag &&
-        (sps->ref_frame_count || avctx->strict_std_compliance >= FF_COMPLIANCE_STRICT)) {
+        (sps->ref_frame_count || (avctx && avctx->strict_std_compliance >= FF_COMPLIANCE_STRICT))) {
         sps->num_reorder_frames = MAX_DELAYED_PIC_COUNT - 1;
         for (i = 0; i < FF_ARRAY_ELEMS(level_max_dpb_mbs); i++) {
             if (level_max_dpb_mbs[i][0] == sps->level_idc) {
@@ -576,7 +576,7 @@ int ff_h264_decode_seq_parameter_set(GetBitContext *gb, AVCodecContext *avctx,
     if (!sps->sar.den)
         sps->sar.den = 1;
 
-    if (avctx->debug & FF_DEBUG_PICT_INFO) {
+    if (avctx && avctx->debug & FF_DEBUG_PICT_INFO) {
         static const char csp[4][5] = { "Gray", "420", "422", "444" };
         av_log(avctx, AV_LOG_DEBUG,
                "sps:%u profile:%d/%d poc:%d ref:%d %dx%d %s %s crop:%u/%u/%u/%u %s %s %"PRId32"/%"PRId32" b%d reo:%d\n",
@@ -846,7 +846,7 @@ int ff_h264_decode_picture_parameter_set(GetBitContext *gb, AVCodecContext *avct
     if (pps->chroma_qp_index_offset[0] != pps->chroma_qp_index_offset[1])
         pps->chroma_qp_diff = 1;
 
-    if (avctx->debug & FF_DEBUG_PICT_INFO) {
+    if (avctx && avctx->debug & FF_DEBUG_PICT_INFO) {
         av_log(avctx, AV_LOG_DEBUG,
                "pps:%u sps:%u %s slice_groups:%d ref:%u/%u %s qp:%d/%d/%d/%d %s %s %s %s\n",
                pps_id, pps->sps_id,

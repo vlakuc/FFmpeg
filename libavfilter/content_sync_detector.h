@@ -21,6 +21,9 @@
 #ifndef AVFILTER_CONTENT_SYNC_DETECTOR_H
 #define AVFILTER_CONTENT_SYNC_DETECTOR_H
 
+
+#define LIPSYNC_UNDEFINED 1110.0f
+
 typedef enum { CONTENT_UNDEFINED=0, CONTENT_BLACK=1, CONTENT_WHITE=2 } content_state_t;
 
 typedef struct {

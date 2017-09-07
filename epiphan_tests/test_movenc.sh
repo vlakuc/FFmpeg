@@ -30,7 +30,7 @@ remux_stream()
     local out_file="${2}"
     local fmt="${3}"
     local opts="${4}"
-    ffmpeg -loglevel panic -i $in_file -codec copy $opts -f $fmt $out_file
+    ffmpeg -threads 1 -loglevel panic -i $in_file -codec copy $opts -f $fmt $out_file
 }
 
 dump_stream_data()

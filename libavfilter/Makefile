@@ -347,7 +347,7 @@ OBJS-$(CONFIG_SHOWWAVES_FILTER)              += avf_showwaves.o
 OBJS-$(CONFIG_SHOWWAVESPIC_FILTER)           += avf_showwaves.o
 OBJS-$(CONFIG_SPECTRUMSYNTH_FILTER)          += vaf_spectrumsynth.o window_func.o
 OBJS-$(CONFIG_AVSYNC_FILTER)                 += avf_avsync.o avsync_utils.o content_sync_detector.o
-
+OBJS-$(CONFIG_AVSYNC2_FILTER)                += avf_avsync2.o
 
 # multimedia sources
 OBJS-$(CONFIG_AMOVIE_FILTER)                 += src_movie.o

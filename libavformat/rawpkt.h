@@ -37,7 +37,9 @@
 #define RAWTAG_SEEK(pb) { while ((avio_tell(pb) % RAWTAG_PADDING_SIZE) != 0) avio_w8(pb,0); }
 #define RAWTAG_SKIP(pb,to) { while (avio_tell(pb) < to) avio_r8(pb); }
 
-#define RAWPACKET_VERSION 2
+#define RAWPACKET_VERSION 3
+// Version 3 changes:
+//  + r_frame_rate in track information
 
 // Direct access to rawpacket stream header and rawpacket packet header
 int ff_rawpacket_read_header(AVIOContext *pb, AVFormatContext** s);			
